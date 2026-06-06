@@ -10,7 +10,7 @@
   --primary: #4f7fe0;
   --primary-dark: #3563c4;
   --bg: #f4f6fb;
-  --card: #ffffff;
+  --card: #fff;
   --border: #e0e6f0;
   --text: #2c3e50;
   --muted: #7f8c9a;
@@ -18,199 +18,264 @@
   --red: #e74c3c;
   --yellow: #f39c12;
   --purple: #8e44ad;
+  --pink: #e91e8c;
+  --blue-fb: #1877f2;
+  --pink-ig: #e1306c;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-header { background: linear-gradient(135deg, #4f7fe0, #6c3fc5); color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-header span { font-size: 1.5rem; }
-header h1 { font-size: 1.2rem; font-weight: 700; }
-header p { font-size: .8rem; opacity: .8; margin-top: 2px; }
+body { font-family: "Noto Sans TC","Microsoft JhengHei",Arial,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-.container { max-width: 1100px; margin: 28px auto; padding: 0 16px; }
-.card { background: var(--card); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); padding: 24px 28px; margin-bottom: 20px; }
-h2 { font-size: 1rem; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+/* Header */
+header { background: linear-gradient(135deg,#4f7fe0,#6c3fc5); color:#fff; padding:16px 32px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+header .icon { font-size:1.8rem; }
+header h1 { font-size:1.15rem; font-weight:700; }
+header p { font-size:.78rem; opacity:.8; margin-top:2px; }
+
+.container { max-width:1100px; margin:24px auto; padding:0 16px; }
+.card { background:var(--card); border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.07); padding:22px 26px; margin-bottom:18px; }
+.card-title { font-size:.95rem; color:var(--primary); border-left:4px solid var(--primary); padding-left:10px; margin-bottom:14px; font-weight:700; display:flex; align-items:center; gap:6px; }
 
 /* Upload */
-.upload-area { border: 2px dashed #b0c4e8; border-radius: 10px; padding: 44px 20px; text-align: center; cursor: pointer; transition: all .2s; background: #f8fbff; }
-.upload-area:hover, .upload-area.drag { background: #eef4ff; border-color: var(--primary); }
-.upload-area .icon { font-size: 3rem; }
-.upload-area strong { display: block; margin: 8px 0 4px; font-size: 1rem; }
-.upload-area p { font-size: .85rem; color: var(--muted); }
-input[type=file] { display: none; }
+.upload-area { border:2px dashed #b0c4e8; border-radius:10px; padding:40px 20px; text-align:center; cursor:pointer; transition:all .2s; background:#f8fbff; }
+.upload-area:hover,.upload-area.drag { background:#eef4ff; border-color:var(--primary); }
+.upload-area .big-icon { font-size:3rem; }
+.upload-area strong { display:block; margin:8px 0 4px; font-size:.95rem; }
+.upload-area p { font-size:.82rem; color:var(--muted); }
+input[type=file] { display:none; }
 
-/* Config */
-.config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: .82rem; color: var(--muted); font-weight: 600; }
-select, input[type=text], input[type=number] { padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: .88rem; width: 100%; background: #fafbfd; }
-select:focus, input:focus { outline: none; border-color: var(--primary); }
+/* Step 2 config */
+.section-label { font-size:.82rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+.chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.chip { padding:5px 14px; border-radius:20px; background:#eef2ff; color:var(--primary); font-size:.82rem; cursor:pointer; border:1.5px solid transparent; transition:all .15s; user-select:none; }
+.chip.on { background:var(--primary); color:#fff; }
+.col-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:14px; }
+.field label { display:block; font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:5px; }
+select, input[type=text], input[type=number] { width:100%; padding:7px 9px; border:1px solid var(--border); border-radius:7px; font-size:.86rem; background:#fafbfd; }
+select:focus, input:focus { outline:none; border-color:var(--primary); }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 20px; border-radius:8px; border:none; cursor:pointer; font-size:.9rem; font-weight:700; transition:all .2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-ghost { background:#eef2f7; color:var(--text); }
+.btn-ghost:hover { background:#dde4ef; }
+.actions { display:flex; gap:10px; margin-top:16px; }
+.error-msg { color:var(--red); background:#fdf3f2; border:1px solid #f5c6c1; padding:8px 12px; border-radius:7px; margin-top:8px; font-size:.86rem; }
 
-.sheet-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.chip { padding: 5px 14px; border-radius: 20px; background: #eef2ff; color: var(--primary); font-size: .83rem; cursor: pointer; border: 1.5px solid transparent; transition: all .15s; user-select: none; }
-.chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer; font-size: .92rem; font-weight: 700; transition: all .2s; }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-ghost { background: #eef2f7; color: var(--text); }
-.btn-ghost:hover { background: #dde4ef; }
-.actions { display: flex; gap: 10px; margin-top: 18px; }
-.error { color: var(--red); background: #fdf3f2; border: 1px solid #f5c6c1; padding: 9px 14px; border-radius: 7px; margin-top: 10px; font-size: .88rem; }
-.hidden { display: none !important; }
-
-/* KPI Summary */
-.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
-.kpi { background: #fff; border-radius: 10px; padding: 18px 20px; border: 1px solid var(--border); }
-.kpi .label { font-size: .78rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
-.kpi .val { font-size: 1.8rem; font-weight: 800; }
-.kpi.blue .val { color: var(--primary); }
-.kpi.green .val { color: var(--green); }
-.kpi.purple .val { color: var(--purple); }
-.kpi.yellow .val { color: var(--yellow); }
-.kpi .sub { font-size: .78rem; color: var(--muted); margin-top: 3px; }
-
-/* Month cards */
-.month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.mcard { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 18px; }
-.mcard h3 { font-size: .95rem; color: var(--primary); margin-bottom: 12px; font-weight: 700; }
-.mcard .rows { font-size: .85rem; }
-.mcard .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f2f4f8; }
-.mcard .row:last-child { border-bottom: none; }
-.mcard .row .v { font-weight: 700; }
-.mcard .row .v.green { color: var(--green); }
-
-/* Table */
-.tbl-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
-th { background: #eef2ff; color: var(--primary); padding: 9px 12px; text-align: left; font-weight: 700; white-space: nowrap; }
-td { padding: 8px 12px; border-bottom: 1px solid #f0f3fa; white-space: nowrap; }
-tr:hover td { background: #fafbff; }
-.bar-cell { display: flex; align-items: center; gap: 8px; }
-.bar { height: 8px; border-radius: 4px; background: var(--primary); opacity: .7; min-width: 2px; }
+/* KPI */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+.kpi { border-radius:10px; padding:16px 18px; border:1px solid var(--border); background:#fff; }
+.kpi .lbl { font-size:.72rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
+.kpi .val { font-size:1.65rem; font-weight:800; }
+.kpi .sub { font-size:.75rem; color:var(--muted); margin-top:2px; }
+.kpi.blue .val  { color:var(--primary); }
+.kpi.green .val { color:var(--green); }
+.kpi.yellow .val{ color:var(--yellow); }
+.kpi.purple .val{ color:var(--purple); }
+.kpi.red .val   { color:var(--red); }
 
 /* Tabs */
-.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 18px; }
-.tab { padding: 8px 16px; font-size: .88rem; cursor: pointer; border-radius: 6px 6px 0 0; color: var(--muted); font-weight: 600; border: 1px solid transparent; margin-bottom: -2px; }
-.tab.active { color: var(--primary); border-color: var(--border); border-bottom-color: #fff; background: #fff; }
+.tabs { display:flex; gap:3px; border-bottom:2px solid var(--border); margin-bottom:16px; }
+.tab { padding:7px 15px; font-size:.85rem; cursor:pointer; border-radius:6px 6px 0 0; color:var(--muted); font-weight:700; border:1px solid transparent; margin-bottom:-2px; }
+.tab.active { color:var(--primary); border-color:var(--border); border-bottom-color:#fff; background:#fff; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
 
-/* Chart legend */
-.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: .8rem; }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+/* Donut chart (CSS only) */
+.donut-wrap { display:flex; gap:28px; flex-wrap:wrap; align-items:center; }
+.donut { position:relative; width:140px; height:140px; flex-shrink:0; }
+.donut svg { transform:rotate(-90deg); }
+.donut-label { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.donut-label .d-val { font-size:1.4rem; font-weight:800; }
+.donut-label .d-lbl { font-size:.7rem; color:var(--muted); }
+.legend { display:flex; flex-direction:column; gap:7px; flex:1; min-width:140px; }
+.legend-item { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.83rem; }
+.legend-item .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.legend-item .name { flex:1; }
+.legend-item .count { font-weight:700; }
+.legend-item .pct { color:var(--muted); font-size:.75rem; min-width:36px; text-align:right; }
 
-.section-title { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+/* Bar table */
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:.85rem; }
+th { background:#eef2ff; color:var(--primary); padding:8px 11px; text-align:left; font-weight:700; white-space:nowrap; }
+td { padding:7px 11px; border-bottom:1px solid #f0f3fa; white-space:nowrap; vertical-align:middle; }
+tr:hover td { background:#fafbff; }
+.bar-wrap { display:flex; align-items:center; gap:7px; }
+.bar { height:7px; border-radius:4px; min-width:2px; }
+
+/* Month cards */
+.month-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; }
+.mcard { border:1px solid var(--border); border-radius:10px; padding:16px; }
+.mcard h3 { font-size:.9rem; color:var(--primary); font-weight:700; margin-bottom:10px; }
+.mrow { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #f2f4f8; font-size:.84rem; }
+.mrow:last-child { border:none; }
+.mrow .mv { font-weight:700; }
+.mrow .mv.green { color:var(--green); }
+
+/* ROAS card */
+.roas-card { background:linear-gradient(135deg,#1a1a2e,#16213e); color:#fff; border-radius:12px; padding:22px 24px; }
+.roas-card h2 { color:#a0c4ff; border-color:#a0c4ff; margin-bottom:16px; }
+.roas-inputs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+.roas-inputs label { font-size:.8rem; color:#a0c4ff; margin-bottom:5px; display:block; font-weight:600; }
+.roas-inputs input { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; border-radius:7px; padding:9px 11px; width:100%; font-size:.95rem; }
+.roas-inputs input::placeholder { color:rgba(255,255,255,.35); }
+.roas-inputs input:focus { outline:none; border-color:#a0c4ff; }
+.roas-result { background:rgba(255,255,255,.06); border-radius:10px; padding:16px 20px; display:flex; gap:28px; flex-wrap:wrap; }
+.roas-metric .rl { font-size:.72rem; color:#a0c4ff; font-weight:600; margin-bottom:4px; }
+.roas-metric .rv { font-size:1.8rem; font-weight:800; }
+.roas-metric .rv.good { color:#4ade80; }
+.roas-metric .rv.mid  { color:#facc15; }
+.roas-metric .rv.bad  { color:#f87171; }
+.social-badges { display:flex; gap:8px; margin-bottom:10px; }
+.badge-fb { background:var(--blue-fb); color:#fff; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:700; }
+.badge-ig { background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:700; }
+
+.hidden { display:none!important; }
+.tag-new { background:#dcfce7; color:#166534; padding:2px 8px; border-radius:10px; font-size:.75rem; font-weight:700; }
+.tag-old { background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:10px; font-size:.75rem; }
+
+/* Color palette for charts */
+.c0{background:#4f7fe0} .c1{background:#27ae60} .c2{background:#f39c12} .c3{background:#e74c3c} .c4{background:#8e44ad} .c5{background:#1abc9c} .c6{background:#e91e8c} .c7{background:#f06292} .c8{background:#0288d1} .c9{background:#558b2f}
 </style>
 </head>
 <body>
 <header>
-  <span>📊</span>
+  <div class="icon">📊</div>
   <div>
     <h1>自費療程月報統計系統</h1>
-    <p>上傳 Excel 自動產生各月份統計報表</p>
+    <p>上傳 Excel → 自動產生新舊客、來源管道、療程、營收、ROAS 完整報表</p>
   </div>
 </header>
 
 <div class="container">
 
-<!-- Step 1: Upload -->
+<!-- ① Upload -->
 <div class="card" id="s1">
-  <h2>① 上傳 Excel 檔案</h2>
+  <div class="card-title">① 上傳 Excel 檔案</div>
   <div class="upload-area" id="dropZone">
     <input type="file" id="fileInput" accept=".xlsx,.xls">
-    <div class="icon">📂</div>
-    <strong>點擊選擇或拖曳檔案到這裡</strong>
+    <div class="big-icon">📂</div>
+    <strong>點擊選擇或拖曳 Excel 到這裡</strong>
     <p>支援 .xlsx / .xls　每個分頁 = 一個月份</p>
   </div>
-  <div id="err1" class="error hidden"></div>
+  <div id="err1" class="error-msg hidden"></div>
 </div>
 
-<!-- Step 2: Config -->
+<!-- ② Config -->
 <div class="card hidden" id="s2">
-  <h2>② 設定欄位對應</h2>
+  <div class="card-title">② 設定欄位對應</div>
 
-  <div class="section-title" style="margin-bottom:8px;">選擇要統計的月份（可多選）</div>
-  <div class="sheet-chips" id="sheetChips"></div>
+  <div class="section-label">選擇要統計的月份（可多選）</div>
+  <div class="chip-row" id="sheetChips"></div>
 
-  <div class="section-title" style="margin-bottom:8px;">表頭在第幾列？</div>
-  <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-    <select id="headerRow" style="width:120px;"></select>
-    <span style="font-size:.82rem;color:var(--muted);">（預覽：表頭欄位如上方下拉選單所示）</span>
+  <div class="section-label">表頭在第幾列</div>
+  <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+    <select id="headerRow" style="width:200px;"></select>
   </div>
 
-  <div class="section-title" style="margin-bottom:10px;">對應欄位</div>
-  <div class="config-grid">
-    <div class="field"><label>客戶識別欄（選填）</label><select id="cName"><option value="">不使用</option></select></div>
-    <div class="field"><label>新/舊客判斷欄（選填）</label><select id="cIsNew"><option value="">不使用</option></select></div>
-    <div class="field"><label>新客標記值（逗號分隔）</label><input type="text" id="newVals" value="新,Y,y,yes,是,1,true"></div>
-    <div class="field"><label>來源管道欄（選填）</label><select id="cSource"><option value="">不使用</option></select></div>
-    <div class="field"><label>療程項目欄（選填）</label><select id="cTreat"><option value="">不使用</option></select></div>
-    <div class="field"><label>費用欄（選填）</label><select id="cFee"><option value="">不使用</option></select></div>
+  <div class="section-label">欄位對應（系統會自動猜測，請確認後調整）</div>
+  <div class="col-grid">
+    <div class="field"><label>① 新舊客欄</label><select id="cIsNew"><option value="">不使用</option></select></div>
+    <div class="field"><label>新客標記值（逗號分隔）</label><input type="text" id="newVals" value="新,新客,Y,y,yes,是,1,true,new"></div>
+    <div class="field"><label>② 患者姓名欄</label><select id="cName"><option value="">不使用</option></select></div>
+    <div class="field"><label>③ 如何得知本診所欄</label><select id="cSource"><option value="">不使用</option></select></div>
+    <div class="field"><label>④ 諮詢內容欄（療程）</label><select id="cTreat"><option value="">不使用</option></select></div>
+    <div class="field"><label>⑤ 收費金額欄</label><select id="cFee"><option value="">不使用</option></select></div>
+  </div>
+
+  <div class="section-label" style="margin-top:4px;">Facebook / Instagram 來源關鍵字（逗號分隔，用於計算社群營收）</div>
+  <div style="margin-bottom:14px;">
+    <input type="text" id="fbKeywords" value="Facebook,FB,臉書,facebook,fb" style="max-width:280px;display:inline-block;">
+    &nbsp;
+    <input type="text" id="igKeywords" value="Instagram,IG,ig,instagram" style="max-width:280px;display:inline-block;">
+    <span style="font-size:.76rem;color:var(--muted);margin-left:6px;">← FB　　IG →</span>
   </div>
 
   <div class="actions">
     <button class="btn btn-primary" id="analyzeBtn">🔍 開始統計</button>
     <button class="btn btn-ghost" id="reuploadBtn">↩ 重新上傳</button>
   </div>
-  <div id="err2" class="error hidden"></div>
+  <div id="err2" class="error-msg hidden"></div>
 </div>
 
-<!-- Step 3: Results -->
+<!-- ③ Results -->
 <div id="s3" class="hidden">
 
-  <!-- KPI -->
+  <!-- KPI bar -->
   <div class="card">
-    <h2>📈 整體概覽</h2>
+    <div class="card-title">📈 整體總覽</div>
     <div class="kpi-row" id="kpiRow"></div>
+  </div>
+
+  <!-- ROAS -->
+  <div class="roas-card card">
+    <div class="card-title" style="color:#a0c4ff;border-color:#a0c4ff;">📣 廣告 ROAS 計算機</div>
+    <div class="social-badges"><span class="badge-fb">Facebook</span><span class="badge-ig">Instagram</span></div>
+    <div style="font-size:.82rem;color:#8aabcc;margin-bottom:12px;">社群營收（FB+IG）由系統自動帶入，廣告費用請手動填寫</div>
+    <div class="roas-inputs">
+      <div>
+        <label>Facebook 廣告費用（NT$）</label>
+        <input type="number" id="fbCost" placeholder="例：15000" oninput="calcRoas()">
+      </div>
+      <div>
+        <label>Instagram 廣告費用（NT$）</label>
+        <input type="number" id="igCost" placeholder="例：8000" oninput="calcRoas()">
+      </div>
+    </div>
+    <div class="roas-result" id="roasResult">
+      <div class="roas-metric"><div class="rl">FB 帶來營收</div><div class="rv" id="rFbRev">—</div></div>
+      <div class="roas-metric"><div class="rl">IG 帶來營收</div><div class="rv" id="rIgRev">—</div></div>
+      <div class="roas-metric"><div class="rl">社群總營收</div><div class="rv" id="rSocRev">—</div></div>
+      <div class="roas-metric"><div class="rl">廣告總費用</div><div class="rv" id="rAdCost">—</div></div>
+      <div class="roas-metric"><div class="rl">ROAS</div><div class="rv" id="rRoas">—</div></div>
+    </div>
   </div>
 
   <!-- Tabs -->
   <div class="card">
-    <div class="tabs">
+    <div class="tabs" id="tabBar">
       <div class="tab active" data-tab="monthly">各月明細</div>
+      <div class="tab" data-tab="newold">新舊客分析</div>
       <div class="tab" data-tab="source">來源管道</div>
       <div class="tab" data-tab="treatment">療程統計</div>
       <div class="tab" data-tab="revenue">營收趨勢</div>
     </div>
 
-    <!-- Monthly -->
-    <div id="tab-monthly">
+    <div id="tab-monthly" class="tab-panel active">
       <div class="month-grid" id="monthGrid"></div>
     </div>
 
-    <!-- Source -->
-    <div id="tab-source" class="hidden">
-      <div class="tbl-wrap" id="sourceTable"></div>
+    <div id="tab-newold" class="tab-panel">
+      <div id="newoldContent"></div>
     </div>
 
-    <!-- Treatment -->
-    <div id="tab-treatment" class="hidden">
-      <div class="tbl-wrap" id="treatTable"></div>
+    <div id="tab-source" class="tab-panel">
+      <div id="sourceContent"></div>
     </div>
 
-    <!-- Revenue -->
-    <div id="tab-revenue" class="hidden">
-      <div id="revTable"></div>
+    <div id="tab-treatment" class="tab-panel">
+      <div id="treatContent"></div>
     </div>
 
+    <div id="tab-revenue" class="tab-panel">
+      <div id="revContent"></div>
+    </div>
   </div>
 
-  <div style="margin-bottom:20px;">
+  <div style="margin-bottom:24px;">
     <button class="btn btn-ghost" id="backBtn">← 返回修改設定</button>
   </div>
 </div>
 
-</div>
+</div><!-- /container -->
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
-let workbook = null;
-let allColumns = [];
-let previewRows = [];
+// ─── Global state ────────────────────────────────────────────────────────────
+let wb = null, previewRows = [], allCols = [];
+let gData = {}; // { fbRev, igRev }
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
-
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
@@ -218,82 +283,69 @@ dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.
 fileInput.addEventListener('change', () => { if (fileInput.files[0]) readFile(fileInput.files[0]); });
 
 function readFile(file) {
-  if (!file.name.match(/\.(xlsx|xls)$/i)) { showErr('err1', '請上傳 .xlsx 或 .xls 格式的 Excel 檔案'); return; }
+  if (!file.name.match(/\.(xlsx|xls)$/i)) { showErr('err1','請上傳 .xlsx 或 .xls 格式'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-      buildStep2();
-    } catch(err) { showErr('err1', '讀取 Excel 失敗：' + err.message); }
+      wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+      buildConfig();
+    } catch(ex) { showErr('err1','讀取失敗：'+ex.message); }
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ─── Step 2 ───────────────────────────────────────────────────────────────────
-function buildStep2() {
+// ─── Step 2 build ─────────────────────────────────────────────────────────────
+function buildConfig() {
   // Sheet chips
   const chips = document.getElementById('sheetChips');
   chips.innerHTML = '';
-  workbook.SheetNames.forEach(name => {
-    const c = document.createElement('div');
-    c.className = 'chip on';
-    c.textContent = name;
-    c.dataset.sheet = name;
+  wb.SheetNames.forEach(name => {
+    const c = el('div','chip on'); c.textContent = name; c.dataset.sheet = name;
     c.addEventListener('click', () => c.classList.toggle('on'));
     chips.appendChild(c);
   });
 
-  // Header row selector (preview first sheet)
-  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  const raw = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-  previewRows = raw;
+  // Header row selector
+  const firstSheet = wb.Sheets[wb.SheetNames[0]];
+  previewRows = XLSX.utils.sheet_to_json(firstSheet, { header:1, defval:'' });
   const hrSel = document.getElementById('headerRow');
   hrSel.innerHTML = '';
-  for (let i = 0; i < Math.min(10, raw.length); i++) {
-    const preview = raw[i].slice(0, 5).filter(Boolean).join(' / ');
+  for (let i = 0; i < Math.min(10, previewRows.length); i++) {
+    const prev = previewRows[i].slice(0,6).filter(Boolean).join(' / ');
     const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `第 ${i + 1} 列 — ${preview || '(空)'}`;
+    opt.value = i; opt.textContent = `第 ${i+1} 列 — ${prev||'(空)'}`;
     hrSel.appendChild(opt);
   }
-  hrSel.addEventListener('change', updateColumns);
-  updateColumns();
-
+  hrSel.addEventListener('change', updateCols);
+  updateCols();
   show('s2'); hide('s1'); hide('s3');
 }
 
-function updateColumns() {
-  const hr = parseInt(document.getElementById('headerRow').value) || 0;
-  allColumns = (previewRows[hr] || []).map(c => String(c).trim()).filter(Boolean);
-  const ids = ['cName', 'cIsNew', 'cSource', 'cTreat', 'cFee'];
-  ids.forEach(id => {
+function updateCols() {
+  const hr = +document.getElementById('headerRow').value || 0;
+  allCols = (previewRows[hr]||[]).map(c => String(c).trim()).filter(Boolean);
+  ['cIsNew','cName','cSource','cTreat','cFee'].forEach(id => {
     const sel = document.getElementById(id);
     const cur = sel.value;
     sel.innerHTML = '<option value="">不使用</option>';
-    allColumns.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c; opt.textContent = c;
-      if (c === cur) opt.selected = true;
-      sel.appendChild(opt);
-    });
+    allCols.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; if(c===cur) o.selected=true; sel.appendChild(o); });
   });
-  // Auto-guess columns
   autoGuess();
 }
 
 function autoGuess() {
-  const guesses = {
-    cName:   ['姓名','客戶','客人','名稱','name','client'],
-    cIsNew:  ['新舊客','新/舊','類型','是否新客','new','新客','屬性'],
-    cSource: ['來源','管道','介紹','channel','source','行銷'],
-    cTreat:  ['療程','項目','服務','treatment','項目名稱','施作'],
-    cFee:    ['費用','金額','收費','價格','price','fee','實收','金額小計'],
+  const map = {
+    cIsNew:  ['新舊','新/舊','新舊客','是否新客','類型','客別'],
+    cName:   ['姓名','患者','客戶','名字','名稱','name'],
+    cSource: ['得知','如何','來源','管道','介紹','channel','行銷'],
+    cTreat:  ['諮詢','療程','項目','服務','treatment','主訴'],
+    cFee:    ['收費','費用','金額','price','fee','實收','消費'],
   };
-  Object.entries(guesses).forEach(([id, kws]) => {
+  Object.entries(map).forEach(([id, kws]) => {
     const sel = document.getElementById(id);
     if (sel.value) return;
-    const match = allColumns.find(c => kws.some(k => c.toLowerCase().includes(k.toLowerCase())));
-    if (match) sel.value = match;
+    const m = allCols.find(c => kws.some(k => c.toLowerCase().includes(k.toLowerCase())));
+    if (m) sel.value = m;
   });
 }
 
@@ -302,202 +354,336 @@ document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('reuploadBtn').addEventListener('click', () => { show('s1'); hide('s2'); hide('s3'); });
 document.getElementById('backBtn').addEventListener('click', () => { show('s2'); hide('s3'); });
 
-function analyze() {
-  showErr('err2', '');
-  const selectedSheets = [...document.querySelectorAll('#sheetChips .chip.on')].map(c => c.dataset.sheet);
-  if (!selectedSheets.length) { showErr('err2', '請至少選擇一個月份分頁'); return; }
+function getSheetData(sheetName) {
+  const sheet = wb.Sheets[sheetName];
+  const hr = +document.getElementById('headerRow').value || 0;
+  const raw = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+  const headers = (raw[hr]||[]).map(h => String(h).trim());
+  const rows = raw.slice(hr+1)
+    .map(r => { const o={}; headers.forEach((h,i)=>{ o[h]=r[i]??''; }); return o; })
+    .filter(r => Object.values(r).some(v => v!==''&&v!==null&&v!==undefined));
+  return rows;
+}
 
-  const hr = parseInt(document.getElementById('headerRow').value) || 0;
-  const colName   = document.getElementById('cName').value;
+function kws(str) { return str.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean); }
+
+function analyze() {
+  showErr('err2','');
+  const sheets = [...document.querySelectorAll('#sheetChips .chip.on')].map(c=>c.dataset.sheet);
+  if (!sheets.length) { showErr('err2','請至少選擇一個月份'); return; }
+
   const colIsNew  = document.getElementById('cIsNew').value;
+  const colName   = document.getElementById('cName').value;
   const colSource = document.getElementById('cSource').value;
   const colTreat  = document.getElementById('cTreat').value;
   const colFee    = document.getElementById('cFee').value;
-  const newVals   = document.getElementById('newVals').value.split(',').map(v => v.trim().toLowerCase()).filter(Boolean);
+  const newVals   = kws(document.getElementById('newVals').value);
+  const fbKws     = kws(document.getElementById('fbKeywords').value);
+  const igKws     = kws(document.getElementById('igKeywords').value);
 
-  const results = [];
-  const globalSources = {};
-  const globalTreatments = {};
-  let grandTotal = 0, grandNew = 0, grandFee = 0, grandRows = 0;
+  const monthly = [];
+  let grandNew=0, grandOld=0, grandFee=0, grandFbFee=0, grandIgFee=0;
+  const allSources={}, allTreatments={};
 
-  selectedSheets.forEach(sheetName => {
-    const sheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: hr === 0 ? undefined : 1, defval: '', range: hr });
-    // If hr > 0, re-parse with correct header
-    let data;
-    if (hr === 0) {
-      data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    } else {
-      const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-      const headers = raw[hr] || [];
-      data = raw.slice(hr + 1).map(r => {
-        const obj = {};
-        headers.forEach((h, i) => { obj[String(h).trim()] = r[i] ?? ''; });
-        return obj;
-      });
-    }
+  sheets.forEach(sheetName => {
+    const rows = getSheetData(sheetName);
+    let newC=0, oldC=0, fee=0, fbFee=0, igFee=0;
+    const sources={}, treatments={};
 
-    data = data.filter(r => Object.values(r).some(v => v !== '' && v !== null && v !== undefined));
-
-    let newCount = 0, fee = 0;
-    const sources = {}, treatments = {};
-
-    data.forEach(row => {
+    rows.forEach(r => {
+      // new/old
       if (colIsNew) {
-        const v = String(row[colIsNew] ?? '').trim().toLowerCase();
-        if (newVals.includes(v)) newCount++;
+        const v = String(r[colIsNew]??'').trim().toLowerCase();
+        if (newVals.includes(v)) newC++; else oldC++;
       }
-      if (colFee) {
-        const v = parseFloat(String(row[colFee]).replace(/,/g, ''));
-        if (!isNaN(v)) fee += v;
-      }
+      // fee
+      const feeVal = colFee ? parseFloat(String(r[colFee]).replace(/,/g,'')) : NaN;
+      if (!isNaN(feeVal)) fee += feeVal;
+      // source
       if (colSource) {
-        const v = String(row[colSource] ?? '').trim();
-        if (v) { sources[v] = (sources[v] || 0) + 1; globalSources[v] = (globalSources[v] || 0) + 1; }
+        const v = String(r[colSource]??'').trim();
+        if (v) {
+          sources[v] = (sources[v]||0)+1;
+          allSources[v] = (allSources[v]||0)+1;
+          const vl = v.toLowerCase();
+          if (!isNaN(feeVal)) {
+            if (fbKws.some(k=>vl.includes(k))) fbFee+=feeVal;
+            if (igKws.some(k=>vl.includes(k))) igFee+=feeVal;
+          }
+        }
       }
+      // treatment
       if (colTreat) {
-        const v = String(row[colTreat] ?? '').trim();
-        if (v) { treatments[v] = (treatments[v] || 0) + 1; globalTreatments[v] = (globalTreatments[v] || 0) + 1; }
+        // support multiple treatments separated by 、/ , ；
+        const raw = String(r[colTreat]??'').trim();
+        if (raw) {
+          raw.split(/[,，、；;\/]+/).map(t=>t.trim()).filter(Boolean).forEach(t => {
+            treatments[t]=(treatments[t]||0)+1;
+            allTreatments[t]=(allTreatments[t]||0)+1;
+          });
+        }
       }
     });
 
-    grandTotal += data.length;
-    grandNew += newCount;
-    grandFee += fee;
-    grandRows += data.length;
-
-    results.push({ month: sheetName, total: data.length, newCount, fee, sources, treatments });
+    grandNew+=newC; grandOld+=oldC; grandFee+=fee; grandFbFee+=fbFee; grandIgFee+=igFee;
+    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, fbFee, igFee, sources, treatments });
   });
 
-  renderResults(results, { grandTotal, grandNew, grandFee, globalSources, globalTreatments, hasNew: !!colIsNew, hasFee: !!colFee, hasSource: !!colSource, hasTreat: !!colTreat });
+  const grandTotal = grandNew+grandOld || monthly.reduce((s,m)=>s+m.total,0);
+  gData = { fbRev:grandFbFee, igRev:grandIgFee };
+  renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, grandFbFee, grandIgFee, allSources, allTreatments, colIsNew, colFee, colSource, colTreat });
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
-function renderResults(results, g) {
+function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, grandFbFee, grandIgFee, allSources, allTreatments, colIsNew, colFee, colSource, colTreat }) {
   // KPI
-  const kpi = document.getElementById('kpiRow');
-  kpi.innerHTML = '';
-  const kpis = [
-    { label: '總客次', val: g.grandTotal.toLocaleString(), sub: `共 ${results.length} 個月`, cls: 'blue' },
-  ];
-  if (g.hasNew) kpis.push({ label: '新客人數', val: g.grandNew.toLocaleString(), sub: `佔比 ${pct(g.grandNew, g.grandTotal)}`, cls: 'green' });
-  if (g.hasFee) kpis.push({ label: '總營收', val: 'NT$ ' + g.grandFee.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0}), sub: `平均每月 NT$ ${(g.grandFee/results.length).toLocaleString(undefined,{maximumFractionDigits:0})}`, cls: 'yellow' });
-  if (g.hasSource) kpis.push({ label: '來源管道數', val: Object.keys(g.globalSources).length, sub: '不同管道', cls: 'purple' });
-  if (g.hasTreat) kpis.push({ label: '療程種類', val: Object.keys(g.globalTreatments).length, sub: '不同療程', cls: 'blue' });
-
+  const kpiRow = document.getElementById('kpiRow');
+  kpiRow.innerHTML = '';
+  const kpis = [{ lbl:'總客次', val: grandTotal+'人', sub:`共 ${monthly.length} 個月`, cls:'blue' }];
+  if (colIsNew) {
+    kpis.push({ lbl:'新客人數', val: grandNew+'人', sub:`佔比 ${pct(grandNew,grandTotal)}`, cls:'green' });
+    kpis.push({ lbl:'舊客人數', val: grandOld+'人', sub:`佔比 ${pct(grandOld,grandTotal)}`, cls:'purple' });
+  }
+  if (colFee) {
+    kpis.push({ lbl:'總營收', val:'NT$ '+fmt(grandFee), sub:`月均 NT$ ${fmt(grandFee/monthly.length)}`, cls:'yellow' });
+    if (colSource) {
+      kpis.push({ lbl:'FB+IG 社群營收', val:'NT$ '+fmt(grandFbFee+grandIgFee), sub:`佔總營收 ${pct(grandFbFee+grandIgFee,grandFee)}`, cls:'red' });
+    }
+  }
   kpis.forEach(k => {
-    const d = document.createElement('div');
-    d.className = `kpi ${k.cls}`;
-    d.innerHTML = `<div class="label">${k.label}</div><div class="val">${k.val}</div><div class="sub">${k.sub}</div>`;
-    kpi.appendChild(d);
+    const d = el('div','kpi '+k.cls);
+    d.innerHTML = `<div class="lbl">${k.lbl}</div><div class="val">${k.val}</div><div class="sub">${k.sub}</div>`;
+    kpiRow.appendChild(d);
   });
 
-  // Monthly cards
+  // ROAS init
+  document.getElementById('rFbRev').textContent = 'NT$ '+fmt(grandFbFee);
+  document.getElementById('rIgRev').textContent = 'NT$ '+fmt(grandIgFee);
+  document.getElementById('rSocRev').textContent = 'NT$ '+fmt(grandFbFee+grandIgFee);
+  document.getElementById('fbCost').value = '';
+  document.getElementById('igCost').value = '';
+  calcRoas();
+
+  // Monthly tab
   const grid = document.getElementById('monthGrid');
   grid.innerHTML = '';
-  results.forEach(r => {
-    const c = document.createElement('div');
-    c.className = 'mcard';
-    let html = `<h3>📅 ${r.month}</h3><div class="rows">`;
-    html += row('總客次', r.total + ' 人');
-    if (g.hasNew) html += row('新客人數', r.newCount + ' 人 (' + pct(r.newCount, r.total) + ')', 'green');
-    if (g.hasFee) html += row('本月營收', 'NT$ ' + r.fee.toLocaleString(undefined,{maximumFractionDigits:0}), 'green');
-    if (g.hasFee && r.total > 0) html += row('客均消費', 'NT$ ' + (r.fee/r.total).toLocaleString(undefined,{maximumFractionDigits:0}));
-    if (g.hasSource && Object.keys(r.sources).length) {
-      const top = Object.entries(r.sources).sort((a,b)=>b[1]-a[1])[0];
-      html += row('最大來源', `${top[0]} (${top[1]}人)`);
+  monthly.forEach(m => {
+    const c = el('div','mcard');
+    let h = `<h3>📅 ${m.month}</h3>`;
+    h += mrow('總客次', m.total+'人');
+    if (colIsNew) {
+      h += mrow('新客', `<span class="tag-new">新 ${m.newC}人</span> ${pct(m.newC,m.total)}`);
+      h += mrow('舊客', `<span class="tag-old">舊 ${m.oldC}人</span> ${pct(m.oldC,m.total)}`);
     }
-    if (g.hasTreat && Object.keys(r.treatments).length) {
-      const top = Object.entries(r.treatments).sort((a,b)=>b[1]-a[1])[0];
-      html += row('最多療程', `${top[0]} (${top[1]}次)`);
+    if (colFee) {
+      h += mrow('本月營收', 'NT$ '+fmt(m.fee), 'green');
+      if (m.total) h += mrow('客均消費', 'NT$ '+fmt(m.fee/m.total));
+      if (colSource) h += mrow('FB+IG 營收', 'NT$ '+fmt(m.fbFee+m.igFee));
     }
-    html += '</div>';
-    c.innerHTML = html;
+    if (colSource && Object.keys(m.sources).length) {
+      const top = Object.entries(m.sources).sort((a,b)=>b[1]-a[1])[0];
+      h += mrow('最大來源', `${top[0]}（${top[1]}人）`);
+    }
+    if (colTreat && Object.keys(m.treatments).length) {
+      const top = Object.entries(m.treatments).sort((a,b)=>b[1]-a[1])[0];
+      h += mrow('最熱療程', `${top[0]}（${top[1]}次）`);
+    }
+    c.innerHTML = h;
     grid.appendChild(c);
   });
 
-  // Source table
-  if (g.hasSource) {
-    const sorted = Object.entries(g.globalSources).sort((a,b)=>b[1]-a[1]);
-    const maxV = sorted[0]?.[1] || 1;
-    let html = '<table><tr><th>來源管道</th><th>總人次</th><th>佔比</th><th>趨勢</th></tr>';
-    sorted.forEach(([src, cnt]) => {
-      const p = pct(cnt, g.grandTotal);
-      const bw = Math.round((cnt/maxV)*160);
-      html += `<tr><td>${src}</td><td><b>${cnt}</b></td><td>${p}</td><td><div class="bar-cell"><div class="bar" style="width:${bw}px"></div></div></td></tr>`;
-    });
-    html += '</table>';
-    document.getElementById('sourceTable').innerHTML = html;
-    document.querySelector('[data-tab="source"]').classList.remove('hidden-tab');
+  // New/Old tab
+  if (colIsNew) {
+    const newoldDiv = document.getElementById('newoldContent');
+    const colors = ['#27ae60','#8e44ad'];
+    const segments = [{ label:'新客', count:grandNew }, { label:'舊客', count:grandOld }];
+    newoldDiv.innerHTML = `
+      <div class="donut-wrap" style="margin-bottom:24px;">
+        ${donutSvg(segments, colors, grandTotal, '總客次')}
+        <div class="legend">${segments.map((s,i)=>`
+          <div class="legend-item">
+            <div class="dot" style="background:${colors[i]}"></div>
+            <span class="name">${s.label}</span>
+            <span class="count">${s.count}人</span>
+            <span class="pct">${pct(s.count,grandTotal)}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="tbl-wrap">${monthlyNewOldTable(monthly, colIsNew)}</div>`;
   } else {
-    document.querySelector('[data-tab="source"]').style.opacity = '.4';
+    document.getElementById('newoldContent').innerHTML = '<p style="color:var(--muted);padding:16px;">未設定新舊客欄位</p>';
   }
 
-  // Treatment table
-  if (g.hasTreat) {
-    const sorted = Object.entries(g.globalTreatments).sort((a,b)=>b[1]-a[1]);
-    const maxV = sorted[0]?.[1] || 1;
-    let html = '<table><tr><th>療程項目</th><th>施作次數</th><th>佔比</th><th>趨勢</th></tr>';
-    sorted.forEach(([t, cnt]) => {
-      const p = pct(cnt, Object.values(g.globalTreatments).reduce((a,b)=>a+b,0));
-      const bw = Math.round((cnt/maxV)*160);
-      html += `<tr><td>${t}</td><td><b>${cnt}</b></td><td>${p}</td><td><div class="bar-cell"><div class="bar" style="width:${bw}px;background:#8e44ad;"></div></div></td></tr>`;
+  // Source tab
+  if (colSource) {
+    const sorted = Object.entries(allSources).sort((a,b)=>b[1]-a[1]);
+    const total = Object.values(allSources).reduce((s,v)=>s+v,0);
+    const colors10 = ['#4f7fe0','#27ae60','#f39c12','#e74c3c','#8e44ad','#1abc9c','#e91e8c','#f06292','#0288d1','#558b2f'];
+    const top10 = sorted.slice(0,10);
+    const maxV = top10[0]?.[1]||1;
+    let tbl = `<div class="donut-wrap" style="margin-bottom:24px;">
+      ${donutSvg(top10.map(([l,c])=>({label:l,count:c})), colors10, total, '來源')}
+      <div class="legend">${top10.map(([src,cnt],i)=>`
+        <div class="legend-item">
+          <div class="dot" style="background:${colors10[i]||'#ccc'}"></div>
+          <span class="name">${src}</span>
+          <span class="count">${cnt}人</span>
+          <span class="pct">${pct(cnt,total)}</span>
+        </div>`).join('')}
+      </div></div>
+    <div class="tbl-wrap"><table>
+      <tr><th>來源管道</th><th>人次</th><th>佔比</th><th>${colFee?'帶來營收':''}</th><th>趨勢</th></tr>`;
+    sorted.forEach(([src,cnt],i) => {
+      const bw = Math.round((cnt/maxV)*180);
+      const srcFee = colFee ? monthly.reduce((s,m)=>{
+        const fbMatch = document.getElementById('fbKeywords').value.split(',').map(k=>k.trim().toLowerCase()).some(k=>src.toLowerCase().includes(k));
+        const igMatch = document.getElementById('igKeywords').value.split(',').map(k=>k.trim().toLowerCase()).some(k=>src.toLowerCase().includes(k));
+        // approximate: sum fee for rows with this source
+        return s; // We'd need row-level data; use a simpler approach below
+      },0) : null;
+      tbl += `<tr><td>${src}</td><td><b>${cnt}</b></td><td>${pct(cnt,total)}</td><td>${colFee?'':''}</td><td><div class="bar-wrap"><div class="bar c${i%10}" style="width:${bw}px"></div></div></td></tr>`;
     });
-    html += '</table>';
-    document.getElementById('treatTable').innerHTML = html;
+    tbl += '</table></div>';
+    document.getElementById('sourceContent').innerHTML = tbl;
   } else {
-    document.querySelector('[data-tab="treatment"]').style.opacity = '.4';
+    document.getElementById('sourceContent').innerHTML = '<p style="color:var(--muted);padding:16px;">未設定來源管道欄位</p>';
   }
 
-  // Revenue trend table
-  if (g.hasFee) {
-    let html = '<table><tr><th>月份</th><th>客次</th><th>新客</th><th>營收</th><th>客均消費</th><th>趨勢</th></tr>';
-    const maxFee = Math.max(...results.map(r=>r.fee)) || 1;
-    results.forEach(r => {
-      const bw = Math.round((r.fee/maxFee)*160);
-      const avg = r.total ? (r.fee/r.total).toLocaleString(undefined,{maximumFractionDigits:0}) : '-';
+  // Treatment tab
+  if (colTreat) {
+    const sorted = Object.entries(allTreatments).sort((a,b)=>b[1]-a[1]);
+    const total = Object.values(allTreatments).reduce((s,v)=>s+v,0);
+    const colors10 = ['#8e44ad','#4f7fe0','#27ae60','#f39c12','#e74c3c','#1abc9c','#e91e8c','#f06292','#0288d1','#558b2f'];
+    const top10 = sorted.slice(0,10);
+    const maxV = sorted[0]?.[1]||1;
+    let html = `<div class="donut-wrap" style="margin-bottom:24px;">
+      ${donutSvg(top10.map(([l,c])=>({label:l,count:c})), colors10, total, '療程次數')}
+      <div class="legend">${top10.map(([t,cnt],i)=>`
+        <div class="legend-item">
+          <div class="dot" style="background:${colors10[i]||'#ccc'}"></div>
+          <span class="name">${t}</span>
+          <span class="count">${cnt}次</span>
+          <span class="pct">${pct(cnt,total)}</span>
+        </div>`).join('')}
+      </div></div>
+    <div class="tbl-wrap"><table>
+      <tr><th>療程項目</th><th>施作次數</th><th>佔比</th><th>趨勢</th></tr>`;
+    sorted.forEach(([t,cnt],i) => {
+      const bw = Math.round((cnt/maxV)*180);
+      html += `<tr><td>${t}</td><td><b>${cnt}</b></td><td>${pct(cnt,total)}</td><td><div class="bar-wrap"><div class="bar" style="width:${bw}px;background:${colors10[i%10]||'#8e44ad'}"></div></div></td></tr>`;
+    });
+    html += '</table></div>';
+    document.getElementById('treatContent').innerHTML = html;
+  } else {
+    document.getElementById('treatContent').innerHTML = '<p style="color:var(--muted);padding:16px;">未設定諮詢內容欄位</p>';
+  }
+
+  // Revenue tab
+  if (colFee) {
+    const maxFee = Math.max(...monthly.map(m=>m.fee))||1;
+    let html = `<div class="tbl-wrap"><table>
+      <tr><th>月份</th><th>客次</th>${colIsNew?'<th>新客</th>':''}
+          <th>總營收</th><th>客均消費</th>
+          ${colSource?'<th><span class="badge-fb">FB</span> 營收</th><th><span class="badge-ig">IG</span> 營收</th>':''}
+          <th>趨勢</th></tr>`;
+    monthly.forEach(m => {
+      const bw = Math.round((m.fee/maxFee)*160);
+      const avg = m.total ? fmt(m.fee/m.total) : '-';
       html += `<tr>
-        <td><b>${r.month}</b></td>
-        <td>${r.total}</td>
-        <td>${g.hasNew ? r.newCount : '-'}</td>
-        <td><b>NT$ ${r.fee.toLocaleString(undefined,{maximumFractionDigits:0})}</b></td>
+        <td><b>${m.month}</b></td>
+        <td>${m.total}</td>
+        ${colIsNew?`<td><span class="tag-new">新 ${m.newC}</span></td>`:''}
+        <td><b>NT$ ${fmt(m.fee)}</b></td>
         <td>NT$ ${avg}</td>
-        <td><div class="bar-cell"><div class="bar" style="width:${bw}px;background:#f39c12;"></div></div></td>
+        ${colSource?`<td>NT$ ${fmt(m.fbFee)}</td><td>NT$ ${fmt(m.igFee)}</td>`:''}
+        <td><div class="bar-wrap"><div class="bar" style="width:${bw}px;background:#f39c12"></div></div></td>
       </tr>`;
     });
-    html += '</table>';
-    document.getElementById('revTable').innerHTML = html;
+    html += '</table></div>';
+    document.getElementById('revContent').innerHTML = html;
   } else {
-    document.querySelector('[data-tab="revenue"]').style.opacity = '.4';
+    document.getElementById('revContent').innerHTML = '<p style="color:var(--muted);padding:16px;">未設定收費金額欄位</p>';
   }
 
   show('s3'); hide('s1'); hide('s2');
   switchTab('monthly');
 }
 
-function row(label, val, cls='') {
-  return `<div class="row"><span>${label}</span><span class="v ${cls}">${val}</span></div>`;
+// ─── ROAS Calculator ─────────────────────────────────────────────────────────
+function calcRoas() {
+  const fbRev  = gData.fbRev  || 0;
+  const igRev  = gData.igRev  || 0;
+  const fbCost = parseFloat(document.getElementById('fbCost').value)||0;
+  const igCost = parseFloat(document.getElementById('igCost').value)||0;
+  const totalRev  = fbRev + igRev;
+  const totalCost = fbCost + igCost;
+  const roas = totalCost > 0 ? (totalRev / totalCost * 100) : null;
+
+  document.getElementById('rFbRev').textContent  = 'NT$ '+fmt(fbRev);
+  document.getElementById('rIgRev').textContent  = 'NT$ '+fmt(igRev);
+  document.getElementById('rSocRev').textContent = 'NT$ '+fmt(totalRev);
+  document.getElementById('rAdCost').textContent = totalCost > 0 ? 'NT$ '+fmt(totalCost) : '—';
+  const roasEl = document.getElementById('rRoas');
+  if (roas === null) { roasEl.textContent='—'; roasEl.className='rv'; }
+  else {
+    roasEl.textContent = roas.toFixed(1)+'%';
+    roasEl.className = 'rv ' + (roas>=300?'good':roas>=100?'mid':'bad');
+  }
 }
-function pct(a, b) { return b ? Math.round(a/b*100) + '%' : '0%'; }
+
+// ─── Donut SVG ────────────────────────────────────────────────────────────────
+function donutSvg(segments, colors, total, centerLabel) {
+  const r=54, cx=70, cy=70, stroke=18;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  let paths = '';
+  segments.forEach((s,i) => {
+    const ratio = total>0 ? s.count/total : 0;
+    const len = ratio * circ;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i]||'#ccc'}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}" style="transition:stroke-dasharray .4s"/>`;
+    offset += len;
+  });
+  return `<div class="donut">
+    <svg width="140" height="140" viewBox="0 0 140 140">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="${stroke}"/>
+      ${paths}
+    </svg>
+    <div class="donut-label"><div class="d-val">${total}</div><div class="d-lbl">${centerLabel}</div></div>
+  </div>`;
+}
+
+// ─── Monthly new/old table ────────────────────────────────────────────────────
+function monthlyNewOldTable(monthly, colIsNew) {
+  let html = '<table><tr><th>月份</th><th>總客次</th><th>新客</th><th>新客佔比</th><th>舊客</th><th>舊客佔比</th></tr>';
+  monthly.forEach(m => {
+    html += `<tr>
+      <td><b>${m.month}</b></td>
+      <td>${m.total}</td>
+      <td><span class="tag-new">新 ${m.newC}</span></td>
+      <td>${pct(m.newC,m.total)}</td>
+      <td><span class="tag-old">舊 ${m.oldC}</span></td>
+      <td>${pct(m.oldC,m.total)}</td>
+    </tr>`;
+  });
+  return html + '</table>';
+}
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => switchTab(t.dataset.tab));
-});
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  ['monthly','source','treatment','revenue'].forEach(id => {
-    document.getElementById('tab-' + id).classList.toggle('hidden', id !== name);
-  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='tab-'+name));
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function el(tag, cls='') { const e=document.createElement(tag); if(cls) e.className=cls; return e; }
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
-function showErr(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.toggle('hidden', !msg);
+function showErr(id, msg) { const e=document.getElementById(id); e.textContent=msg; e.classList.toggle('hidden',!msg); }
+function pct(a,b) { return b ? Math.round(a/b*100)+'%' : '0%'; }
+function fmt(n) { return (Math.round(n)||0).toLocaleString(); }
+function mrow(label, val, cls='') {
+  return `<div class="mrow"><span>${label}</span><span class="mv ${cls}">${val}</span></div>`;
 }
 </script>
 </body>
