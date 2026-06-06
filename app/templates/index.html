@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自費療程月報統計</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #f5f7fa; color: #333; }
+  header { background: #2d6a9f; color: #fff; padding: 18px 32px; font-size: 1.3rem; font-weight: bold; }
+  .container { max-width: 960px; margin: 32px auto; padding: 0 16px; }
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.08); padding: 28px; margin-bottom: 24px; }
+  h2 { font-size: 1.1rem; margin-bottom: 16px; color: #2d6a9f; border-left: 4px solid #2d6a9f; padding-left: 10px; }
+  .upload-area { border: 2px dashed #a0b8d8; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: background .2s; }
+  .upload-area:hover { background: #eef4fb; }
+  .upload-area input { display: none; }
+  .upload-area p { color: #666; margin-top: 8px; font-size: .9rem; }
+  .btn { display: inline-block; padding: 10px 22px; border-radius: 6px; border: none; cursor: pointer; font-size: .95rem; font-weight: bold; transition: background .2s; }
+  .btn-primary { background: #2d6a9f; color: #fff; }
+  .btn-primary:hover { background: #245680; }
+  .btn-secondary { background: #e8edf2; color: #333; }
+  .btn-secondary:hover { background: #d0d8e2; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .col { flex: 1; min-width: 180px; }
+  label { display: block; font-size: .85rem; color: #555; margin-bottom: 6px; }
+  select, input[type="text"] { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: .9rem; }
+  .sheet-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .sheet-tag { padding: 5px 12px; border-radius: 20px; background: #e8edf2; cursor: pointer; font-size: .85rem; user-select: none; }
+  .sheet-tag.active { background: #2d6a9f; color: #fff; }
+  .hidden { display: none; }
+  /* Results */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .month-card { background: #f8fbff; border: 1px solid #d0e0f0; border-radius: 8px; padding: 18px; }
+  .month-card h3 { color: #2d6a9f; margin-bottom: 12px; font-size: 1rem; }
+  .stat { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: .9rem; }
+  .stat .val { font-weight: bold; color: #1a4a72; }
+  .treatment-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .85rem; }
+  .treatment-table th { text-align: left; padding: 4px 6px; background: #e8edf2; }
+  .treatment-table td { padding: 4px 6px; border-bottom: 1px solid #eee; }
+  .total-row { background: #eef4fb; font-weight: bold; padding: 12px; border-radius: 6px; margin-top: 16px; font-size: .95rem; display: flex; gap: 24px; flex-wrap: wrap; }
+  .loading { text-align: center; color: #666; padding: 20px; }
+  .error { color: #c0392b; background: #fdf0ef; padding: 10px 14px; border-radius: 6px; margin-top: 10px; }
+  .step-num { display: inline-block; width: 24px; height: 24px; background: #2d6a9f; color: #fff; border-radius: 50%; text-align: center; line-height: 24px; font-size: .8rem; margin-right: 6px; }
+</style>
+</head>
+<body>
+<header>自費療程月報統計系統</header>
+<div class="container">
+
+  <!-- Step 1: Upload -->
+  <div class="card" id="step1">
+    <h2><span class="step-num">1</span>上傳 Excel 檔案</h2>
+    <div class="upload-area" id="dropZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div style="font-size:2.5rem;">📊</div>
+      <div style="font-weight:bold;margin-top:8px;">點擊或拖曳 Excel 檔案到這裡</div>
+      <p>支援 .xlsx / .xls，每個分頁代表一個月份</p>
+    </div>
+    <div id="uploadError" class="error hidden"></div>
+  </div>
+
+  <!-- Step 2: Config -->
+  <div class="card hidden" id="step2">
+    <h2><span class="step-num">2</span>設定欄位對應</h2>
+
+    <label style="font-weight:bold;margin-bottom:8px;display:block;">選擇要分析的月份分頁（可多選）</label>
+    <div class="sheet-list" id="sheetList"></div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:.85rem;color:#555;">表頭在第幾列（0 = 第一列）</label>
+      <input type="number" id="headerRow" value="0" min="0" style="width:80px;">
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>客戶姓名欄（選填，用於識別）</label>
+        <select id="colName"><option value="">-- 不使用 --</option></select>
+      </div>
+      <div class="col">
+        <label>新客/舊客 判斷欄（選填）</label>
+        <select id="colIsNew"><option value="">-- 不使用 --</option></select>
+      </div>
+      <div class="col">
+        <label>新客標記值（逗號分隔）</label>
+        <input type="text" id="newValues" value="新,Y,y,yes,是,1">
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <div class="col">
+        <label>費用欄（選填）</label>
+        <select id="colFee"><option value="">-- 不使用 --</option></select>
+      </div>
+      <div class="col">
+        <label>療程項目欄（選填）</label>
+        <select id="colTreatment"><option value="">-- 不使用 --</option></select>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-primary" id="analyzeBtn">開始分析</button>
+      <button class="btn btn-secondary" id="resetBtn">重新上傳</button>
+    </div>
+    <div id="analyzeError" class="error hidden"></div>
+  </div>
+
+  <!-- Step 3: Results -->
+  <div class="card hidden" id="step3">
+    <h2><span class="step-num">3</span>統計結果</h2>
+    <div id="totalSummary" class="total-row"></div>
+    <div id="resultsGrid" class="summary-grid" style="margin-top:16px;"></div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-secondary" id="backBtn">返回修改設定</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let state = { tmpPath: null, sheets: [], columns: [], headerRow: 0, selectedSheets: [] };
+
+// Upload area
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background = '#eef4fb'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.background = ''; });
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.style.background = '';
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+async function handleFile(file) {
+  showError('uploadError', '');
+  const form = new FormData();
+  form.append('file', file);
+  dropZone.innerHTML = '<div style="color:#666;">上傳中...</div>';
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) { showError('uploadError', data.error); resetUpload(); return; }
+    state = { tmpPath: data.tmp_path, sheets: data.sheets, columns: data.columns, headerRow: data.header_row, selectedSheets: [...data.sheets] };
+    buildStep2();
+  } catch(e) {
+    showError('uploadError', '上傳失敗，請重試');
+    resetUpload();
+  }
+}
+
+function resetUpload() {
+  dropZone.innerHTML = `<input type="file" id="fileInput" accept=".xlsx,.xls"><div style="font-size:2.5rem;">📊</div><div style="font-weight:bold;margin-top:8px;">點擊或拖曳 Excel 檔案到這裡</div><p>支援 .xlsx / .xls，每個分頁代表一個月份</p>`;
+  document.getElementById('fileInput').addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+}
+
+function buildStep2() {
+  // Sheet tags
+  const sheetList = document.getElementById('sheetList');
+  sheetList.innerHTML = '';
+  state.sheets.forEach(s => {
+    const tag = document.createElement('div');
+    tag.className = 'sheet-tag active';
+    tag.textContent = s;
+    tag.dataset.sheet = s;
+    tag.addEventListener('click', () => {
+      tag.classList.toggle('active');
+      state.selectedSheets = [...sheetList.querySelectorAll('.sheet-tag.active')].map(t => t.dataset.sheet);
+    });
+    sheetList.appendChild(tag);
+  });
+
+  // Column selects
+  const selects = ['colName', 'colIsNew', 'colFee', 'colTreatment'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">-- 不使用 --</option>';
+    state.columns.forEach(c => {
+      if (!c) return;
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  });
+
+  document.getElementById('headerRow').value = state.headerRow;
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('step3').classList.add('hidden');
+}
+
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  showError('analyzeError', '');
+  const sheets = state.selectedSheets;
+  if (!sheets.length) { showError('analyzeError', '請至少選擇一個月份分頁'); return; }
+
+  const colMap = {};
+  const colIsNew = document.getElementById('colIsNew').value;
+  const colFee = document.getElementById('colFee').value;
+  const colTreatment = document.getElementById('colTreatment').value;
+  if (colIsNew) colMap.is_new = colIsNew;
+  if (colFee) colMap.fee = colFee;
+  if (colTreatment) colMap.treatment = colTreatment;
+
+  const newValues = document.getElementById('newValues').value.split(',').map(v => v.trim()).filter(Boolean);
+  const headerRow = parseInt(document.getElementById('headerRow').value) || 0;
+
+  document.getElementById('analyzeBtn').textContent = '分析中...';
+  document.getElementById('analyzeBtn').disabled = true;
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tmp_path: state.tmpPath, sheets, header_row: headerRow, col_map: colMap, new_client_values: newValues })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('analyzeError', data.error); return; }
+    renderResults(data.results, !!colIsNew, !!colFee, !!colTreatment);
+  } catch(e) {
+    showError('analyzeError', '分析失敗，請重試');
+  } finally {
+    document.getElementById('analyzeBtn').textContent = '開始分析';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+});
+
+function renderResults(results, hasNew, hasFee, hasTreatment) {
+  let totalNew = 0, totalFee = 0, allTreatments = {};
+  results.forEach(r => {
+    totalNew += r.new_clients;
+    totalFee += r.total_fee;
+    Object.entries(r.treatments || {}).forEach(([k, v]) => { allTreatments[k] = (allTreatments[k] || 0) + v; });
+  });
+
+  const totalDiv = document.getElementById('totalSummary');
+  let totalHtml = '';
+  if (hasNew) totalHtml += `<span>總新客人數：<strong>${totalNew} 人</strong></span>`;
+  if (hasFee) totalHtml += `<span>總費用：<strong>NT$ ${totalFee.toLocaleString()}</strong></span>`;
+  if (hasTreatment) {
+    const topTreatments = Object.entries(allTreatments).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}(${v})`).join('、');
+    totalHtml += `<span>熱門療程：<strong>${topTreatments}</strong></span>`;
+  }
+  totalDiv.innerHTML = totalHtml;
+
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  results.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+    let html = `<h3>${r.month}</h3>`;
+    if (hasNew) html += `<div class="stat"><span>新客人數</span><span class="val">${r.new_clients} 人</span></div>`;
+    if (hasFee) html += `<div class="stat"><span>總費用</span><span class="val">NT$ ${r.total_fee.toLocaleString()}</span></div>`;
+    if (hasTreatment && Object.keys(r.treatments).length) {
+      html += `<div style="margin-top:10px;font-size:.85rem;color:#555;margin-bottom:4px;">療程施作次數</div>`;
+      html += `<table class="treatment-table"><tr><th>療程</th><th>次數</th></tr>`;
+      Object.entries(r.treatments).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => {
+        html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+      });
+      html += `</table>`;
+    }
+    card.innerHTML = html;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step3').classList.remove('hidden');
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
+  resetUpload();
+});
+document.getElementById('backBtn').addEventListener('click', () => {
+  document.getElementById('step3').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+});
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.toggle('hidden', !msg);
+}
+</script>
+</body>
+</html>
