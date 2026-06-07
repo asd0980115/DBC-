@@ -41,11 +41,11 @@ input[type=file]{display:none;}
 .check-item:hover{border-color:var(--primary);background:#eef4ff;}
 .check-item.on{border-color:var(--primary);background:#eef4ff;}
 .check-item input[type=checkbox]{margin-top:2px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;cursor:pointer;}
-.check-item .ci-body{}
+.check-item .ci-body{min-width:0;width:100%;overflow:hidden;}
 .check-item .ci-title{font-size:.88rem;font-weight:700;}
 .check-item .ci-desc{font-size:.75rem;color:var(--muted);margin-top:2px;}
 .col-sel{margin-top:6px;}
-.col-sel select{font-size:.8rem;padding:4px 7px;border:1px solid var(--border);border-radius:6px;width:100%;background:#fff;}
+.col-sel select{font-size:.8rem;padding:4px 7px;border:1px solid var(--border);border-radius:6px;width:100%;max-width:100%;background:#fff;box-sizing:border-box;}
 .section-label{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
 
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.9rem;font-weight:700;transition:all .2s;}
@@ -165,7 +165,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
         <div class="ci-desc">統計新客/舊客各有多少、佔比</div>
         <div class="col-sel"><select id="col-newold"><option value="">自動偵測</option></select></div>
         <div class="col-sel" style="margin-top:6px;">
-          <input type="text" id="newVals" placeholder="新客標記值（逗號分隔）" value="新,新客,Y,y,yes,是,1,true,new" style="font-size:.78rem;padding:4px 7px;">
+          <input type="text" id="newVals" placeholder="新客標記值（逗號分隔）" value="新,新客,Y,y,yes,是,1,true,new" style="font-size:.78rem;padding:4px 7px;width:100%;box-sizing:border-box;">
         </div>
       </div>
     </label>
@@ -177,8 +177,8 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
         <div class="ci-desc">各來源管道人數與佔比</div>
         <div class="col-sel"><select id="col-source"><option value="">自動偵測</option></select></div>
         <div class="col-sel" style="margin-top:6px;display:flex;gap:4px;">
-          <input type="text" id="fbKws" placeholder="FB關鍵字" value="Facebook,FB,臉書,fb" style="font-size:.75rem;padding:4px 6px;flex:1;">
-          <input type="text" id="igKws" placeholder="IG關鍵字" value="Instagram,IG,ig,instagram" style="font-size:.75rem;padding:4px 6px;flex:1;">
+          <input type="text" id="fbKws" placeholder="FB關鍵字" value="Facebook,FB,臉書,fb" style="font-size:.75rem;padding:4px 6px;flex:1;min-width:0;box-sizing:border-box;">
+          <input type="text" id="igKws" placeholder="IG關鍵字" value="Instagram,IG,ig,instagram" style="font-size:.75rem;padding:4px 6px;flex:1;min-width:0;box-sizing:border-box;">
         </div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:3px;">← FB 關鍵字 ／ IG 關鍵字 →</div>
       </div>
