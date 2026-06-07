@@ -151,22 +151,32 @@ select:focus,input:focus{outline:none;border-color:var(--primary);}
 <!-- ① 設定 Apps Script URL -->
 <div class="card" id="s1">
   <div class="card-title">① 連結 Google Sheet</div>
-  <div class="url-box">
-    <input type="text" id="apiUrl" placeholder="貼上 Apps Script Web App 網址…">
-    <button class="btn btn-primary" id="loadBtn" onclick="loadData()">📥 載入資料</button>
+
+  <div style="margin-bottom:12px;">
+    <label style="font-size:.85rem;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">Google Sheet 網址</label>
+    <div class="url-box">
+      <input type="text" id="sheetUrl" placeholder="貼上 Google Sheet 網址…" value="https://docs.google.com/spreadsheets/d/1rV6oXCNFKRP8tX4YpCyx560jZHHfInDDtyb-0ZIs1WA/edit">
+    </div>
   </div>
+
+  <div style="margin-bottom:16px;">
+    <label style="font-size:.85rem;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">分頁名稱（每行一個月份）</label>
+    <textarea id="sheetNames" rows="5" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;resize:vertical;" placeholder="例如：&#10;1月&#10;2月&#10;3月"></textarea>
+    <div style="font-size:.76rem;color:var(--muted);margin-top:4px;">請填入你 Google Sheet 底部的分頁標籤名稱，每行一個</div>
+  </div>
+
+  <button class="btn btn-primary" id="loadBtn" onclick="loadData()">📥 載入資料</button>
   <div id="err1" class="error-msg hidden"></div>
 
-  <div class="steps">
-    <b>🔧 第一次使用請先設定（一次即可）：</b>
+  <div class="steps" style="margin-top:16px;">
+    <b>🔧 第一次使用請先設定（只需一次）：</b>
     <ol>
       <li>開啟你的 <a href="https://docs.google.com/spreadsheets/d/1rV6oXCNFKRP8tX4YpCyx560jZHHfInDDtyb-0ZIs1WA" target="_blank">Google Sheet</a></li>
-      <li>點上方選單 <b>擴充功能 → Apps Script</b></li>
-      <li>刪除原本的程式碼，貼上 <code>apps-script.js</code> 的內容（已在 GitHub 上）</li>
-      <li>點 <b>部署 → 新增部署作業</b>，類型選「<b>網頁應用程式</b>」</li>
-      <li>執行身分：<b>我</b>　　存取權：<b>所有人</b></li>
-      <li>複製產生的 <b>網頁應用程式網址</b>，貼到上面輸入框</li>
+      <li>右上角點「<b>共用</b>」→「<b>知道連結的任何人</b>」→ 選「<b>檢視者</b>」→ 完成</li>
+      <li>把你的分頁名稱填入上方文字框，每行一個</li>
+      <li>按「載入資料」即可</li>
     </ol>
+    <div style="margin-top:8px;color:#e74c3c;font-size:.8rem;">⚠️ 不需要 Apps Script，只要共用設定正確即可</div>
   </div>
 </div>
 
@@ -300,35 +310,90 @@ let G = {};
 let roasMonthFilter = null;
 
 // ─── Load data from Apps Script ───────────────────────────────────────────────
+// Extract sheet ID from Google Sheet URL
+function extractSheetId(url) {
+  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : null;
+}
+
+// Fetch a single sheet as CSV via gviz endpoint (works for public sheets, no CORS issue)
+async function fetchSheetCsv(sheetId, sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`分頁「${sheetName}」讀取失敗 (HTTP ${res.status})`);
+  return await res.text();
+}
+
+// Parse CSV text → array of objects
+function parseCsv(text) {
+  const lines = text.split(/?
+/).filter(l => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const parse = line => {
+    const result = [], re = /("(?:[^"]|"")*"|[^,]*)(,|$)/g;
+    let m;
+    while ((m = re.exec(line)) !== null) {
+      let v = m[1].startsWith('"') ? m[1].slice(1,-1).replace(/""/g,'"') : m[1];
+      result.push(v.trim());
+      if (m[2] === '') break;
+    }
+    return result;
+  };
+  // Find header row (first row with ≥3 non-empty cells)
+  let hr = 0;
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    if (parse(lines[i]).filter(c=>c).length >= 3) { hr = i; break; }
+  }
+  const headers = parse(lines[hr]).map(h => h.trim());
+  const rows = lines.slice(hr+1)
+    .map(l => { const vals=parse(l); const o={}; headers.forEach((h,i)=>{ o[h]=vals[i]??''; }); return o; })
+    .filter(r => Object.values(r).some(v=>v!==''));
+  return { headers, rows };
+}
+
 async function loadData() {
-  const url = document.getElementById('apiUrl').value.trim();
-  if (!url) { showErr('err1','請先貼上 Apps Script 網址'); return; }
-  // Save URL
-  try { localStorage.setItem('appsScriptUrl', url); } catch(e){}
+  const sheetUrl = document.getElementById('sheetUrl').value.trim();
+  const namesRaw = document.getElementById('sheetNames').value.trim();
+  if (!sheetUrl) { showErr('err1','請填入 Google Sheet 網址'); return; }
+  if (!namesRaw) { showErr('err1','請填入分頁名稱'); return; }
+
+  const sheetId = extractSheetId(sheetUrl);
+  if (!sheetId) { showErr('err1','無法識別 Google Sheet 網址，請確認格式正確'); return; }
+
+  const names = namesRaw.split(/[\n,，]+/).map(s=>s.trim()).filter(Boolean);
+  if (!names.length) { showErr('err1','請至少填入一個分頁名稱'); return; }
+
+  // Save to localStorage
+  try { localStorage.setItem('sheetUrl', sheetUrl); localStorage.setItem('sheetNames', namesRaw); } catch(e){}
 
   const btn = document.getElementById('loadBtn');
   btn.disabled = true; btn.textContent = '載入中…';
   showErr('err1','');
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (!data.sheets || !data.sheets.length) throw new Error('無法讀取分頁資料');
-    rawSheets = data.sheets;
+    const sheets = [];
+    for (const name of names) {
+      const csv = await fetchSheetCsv(sheetId, name);
+      const { headers, rows } = parseCsv(csv);
+      if (headers.length) sheets.push({ name, headers, rows });
+    }
+    if (!sheets.length) throw new Error('所有分頁都無法讀取，請確認 Google Sheet 已設為公開可檢視');
+    rawSheets = sheets;
     buildConfig();
   } catch(e) {
-    showErr('err1', '載入失敗：' + e.message + '　（請確認 Apps Script 已部署且存取權設為「所有人」）');
+    showErr('err1', '載入失敗：' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = '📥 載入資料';
   }
 }
 
-// Restore saved URL
+// Restore saved values
 window.addEventListener('DOMContentLoaded', () => {
   try {
-    const saved = localStorage.getItem('appsScriptUrl');
-    if (saved) document.getElementById('apiUrl').value = saved;
+    const url = localStorage.getItem('sheetUrl');
+    const names = localStorage.getItem('sheetNames');
+    if (url) document.getElementById('sheetUrl').value = url;
+    if (names) document.getElementById('sheetNames').value = names;
   } catch(e) {}
 });
 
