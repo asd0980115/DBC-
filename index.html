@@ -222,20 +222,19 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
 
   <div class="roas-card card">
     <div class="card-title">📣 廣告 ROAS 計算機</div>
-    <div class="roas-note">計算方式：總營收 ÷ 廣告費用。請填寫廣告費用，系統自動帶入總營收。</div>
+    <div class="roas-note">計算方式：營收 ÷ 廣告費用。選擇月份後填寫廣告費用，系統自動帶入對應營收。</div>
+    <div id="roasMonthPicker" class="chip-row"></div>
     <div class="roas-inputs">
       <div>
-        <label>廣告總費用（NT$）</label>
+        <label id="roasCostLabel">廣告費用（NT$）</label>
         <input type="number" id="adCost" placeholder="例：23000" oninput="calcRoas()">
       </div>
       <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
-        <div style="font-size:.82rem;color:#8aabcc;line-height:1.5;">
-          填入當月廣告花費（FB + IG 合計）<br>即可算出 ROAS
-        </div>
+        <div style="font-size:.82rem;color:#8aabcc;line-height:1.5;" id="roasHint">填入廣告花費（FB + IG 合計）即可算出 ROAS</div>
       </div>
     </div>
     <div class="roas-result">
-      <div class="roas-metric"><div class="rl">總營收</div><div class="rv" id="rTotalRev">—</div></div>
+      <div class="roas-metric"><div class="rl" id="rRevLabel">總營收</div><div class="rv" id="rTotalRev">—</div></div>
       <div class="roas-metric"><div class="rl">廣告費用</div><div class="rv" id="rAdCost">—</div></div>
       <div class="roas-metric"><div class="rl">ROAS</div><div class="rv" id="rRoas">—</div></div>
       <div class="roas-metric"><div class="rl">解讀</div><div class="rv" style="font-size:.9rem;line-height:1.4;" id="rExplain">—</div></div>
@@ -456,6 +455,7 @@ function analyze() {
 
   gTotalFee = grandFee;
   document.getElementById('adCost').value = '';
+  buildRoasPicker();
   calcRoas();
 
   renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
@@ -542,6 +542,7 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
   // ROAS
   document.getElementById('rTotalRev').textContent = useFee ? 'NT$ '+fmt(grandFee) : '—';
   document.getElementById('adCost').value = '';
+  buildRoasPicker();
   calcRoas();
 
   show('s3'); hide('s1'); hide('s2'); switchTab('monthly');
@@ -634,8 +635,25 @@ function renderTreat(monthFilter) {
 
 
 // ─── ROAS ─────────────────────────────────────────────────────────────────────
+let roasMonthFilter = null;
+
+function buildRoasPicker() {
+  buildMonthPicker('roasMonthPicker', (month) => {
+    roasMonthFilter = month;
+    document.getElementById('adCost').value = '';
+    document.getElementById('roasCostLabel').textContent = `廣告費用 — ${month||'全部'}（NT$）`;
+    document.getElementById('rRevLabel').textContent = month ? `${month} 營收` : '總營收';
+    document.getElementById('roasHint').innerHTML = month
+      ? `填入 <b>${month}</b> 的廣告費用即可算出當月 ROAS`
+      : '填入廣告花費（FB+IG 合計）即可算出整體 ROAS';
+    calcRoas();
+  }, null);
+  roasMonthFilter = null;
+}
+
 function calcRoas() {
-  const totalRev = gTotalFee;
+  const ms = roasMonthFilter ? G.monthly.filter(m=>m.month===roasMonthFilter) : (G.monthly||[]);
+  const totalRev = ms.reduce((s,m)=>s+m.fee, 0);
   const adCost   = parseFloat(document.getElementById('adCost').value)||0;
   const roas     = adCost > 0 ? totalRev / adCost : null;
 
@@ -645,7 +663,7 @@ function calcRoas() {
   const roasEl = document.getElementById('rRoas');
   const expEl  = document.getElementById('rExplain');
   if (roas === null) {
-    roasEl.textContent='—'; roasEl.className='rv'; expEl.textContent='請填寫廣告費用';
+    roasEl.textContent='—'; roasEl.className='rv'; expEl.textContent='請填寫廣告費用'; expEl.style.color='';
   } else {
     roasEl.textContent = roas.toFixed(2);
     roasEl.className = 'rv '+(roas>=3?'good':roas>=1?'mid':'bad');
