@@ -415,7 +415,7 @@ function analyze() {
 
   sheets.forEach(sheetName => {
     const rows = getSheetRows(sheetName);
-    let newC=0, oldC=0, fee=0;
+    let newC=0, oldC=0, fee=0, socialFee=0;
     const sources={}, treats={};
 
     rows.forEach(r => {
@@ -425,13 +425,17 @@ function analyze() {
         if (newVals.includes(v)) newC++; else oldC++;
       }
       // fee — sum every row (no NaN filter that drops zeros)
-      if (useFee && colFee) {
-        fee += parseFee(r[colFee]);
-      }
+      const rowFee = (useFee && colFee) ? parseFee(r[colFee]) : 0;
+      if (useFee && colFee) fee += rowFee;
       // source
       if (useSource && colSource) {
         const v = String(r[colSource]??'').trim();
-        if (v) { sources[v]=(sources[v]||0)+1; allSources[v]=(allSources[v]||0)+1; }
+        if (v) {
+          sources[v]=(sources[v]||0)+1; allSources[v]=(allSources[v]||0)+1;
+          const vl = v.toLowerCase();
+          const isSocial = fbKws2.some(k=>vl.includes(k)) || igKws2.some(k=>vl.includes(k));
+          if (isSocial) socialFee += rowFee;
+        }
       }
       // treatment — split on common delimiters
       if (useTreat && colTreat) {
@@ -446,7 +450,7 @@ function analyze() {
 
     grandTotal += rows.length;
     grandNew  += newC; grandOld += oldC; grandFee += fee;
-    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, sources, treats });
+    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, socialFee, sources, treats });
   });
 
   gTotalFee = grandFee;
@@ -545,20 +549,20 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
 
   // ── Revenue tab ──
   if (useFee) {
-    const maxFee = Math.max(...monthly.map(m=>m.fee))||1;
-    let rows = monthly.map(m => {
-      const avg = m.total ? fmt(m.fee/m.total) : '—';
-      return [
-        `<b>${m.month}</b>`,
-        m.total,
-        useNewOld ? `<span class="tag-new">新 ${m.newC}</span>` : null,
-        `<b>NT$ ${fmt(m.fee)}</b>`,
-        `NT$ ${avg}`,
-        barCell(m.fee, maxFee, '#f39c12'),
-      ].filter(v=>v!==null);
-    });
-    const headers = ['月份','客次', useNewOld?'新客':null,'總營收','客均消費','趨勢'].filter(Boolean);
-    document.getElementById('revContent').innerHTML = '<div class="tbl-wrap">'+barTable(headers, rows)+'</div>';
+    const showSocial = useSource && monthly.some(m=>m.socialFee>0);
+    document.getElementById('revContent').innerHTML =
+      lineChart(monthly, showSocial) +
+      '<div class="tbl-wrap" style="margin-top:20px;">' +
+      barTable(
+        ['月份','客次','總營收', showSocial?'FB+IG 營收':null,'客均消費'].filter(Boolean),
+        monthly.map(m => [
+          `<b>${m.month}</b>`,
+          m.total,
+          `<b style="color:var(--yellow)">NT$ ${fmt(m.fee)}</b>`,
+          showSocial ? `NT$ ${fmt(m.socialFee)}` : null,
+          m.total ? `NT$ ${fmt(m.fee/m.total)}` : '—',
+        ].filter(v=>v!==null))
+      ) + '</div>';
   } else document.getElementById('revContent').innerHTML = noData();
 
   show('s3'); hide('s1'); hide('s2'); switchTab('monthly');
@@ -590,6 +594,80 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='tab-'+name));
+}
+
+// ─── Line Chart (SVG) ────────────────────────────────────────────────────────
+function lineChart(monthly, showSocial) {
+  if (!monthly.length) return '';
+  const W=860, H=320, padL=80, padR=24, padT=24, padB=48;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxVal = Math.max(...monthly.map(m => m.fee), showSocial ? Math.max(...monthly.map(m=>m.socialFee)) : 0, 1);
+  const n = monthly.length;
+
+  function xPos(i) { return padL + (n===1 ? chartW/2 : i * chartW/(n-1)); }
+  function yPos(v) { return padT + chartH - (v/maxVal)*chartH; }
+
+  // Y axis ticks (5 steps)
+  let yTicks = '';
+  for (let t=0; t<=5; t++) {
+    const v = maxVal * t/5;
+    const y = yPos(v);
+    const label = v>=10000 ? (v/10000).toFixed(1)+'萬' : fmt(v);
+    yTicks += `<line x1="${padL-6}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#e8edf5" stroke-width="1"/>`;
+    yTicks += `<text x="${padL-10}" y="${y+4}" text-anchor="end" font-size="11" fill="#9aa">${label}</text>`;
+  }
+
+  // Total fee line
+  const totalPts = monthly.map((m,i)=>({ x:xPos(i), y:yPos(m.fee), v:m.fee }));
+  const totalPath = totalPts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ');
+  const totalArea = totalPath + ` L${totalPts[totalPts.length-1].x},${padT+chartH} L${totalPts[0].x},${padT+chartH} Z`;
+
+  // Social fee line
+  let socialPath='', socialArea='', socialDots='', socialLegend='';
+  if (showSocial) {
+    const sPts = monthly.map((m,i)=>({ x:xPos(i), y:yPos(m.socialFee), v:m.socialFee }));
+    socialPath = sPts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ');
+    socialArea = socialPath + ` L${sPts[sPts.length-1].x},${padT+chartH} L${sPts[0].x},${padT+chartH} Z`;
+    socialDots = sPts.map(p=>`
+      <circle cx="${p.x}" cy="${p.y}" r="5" fill="#e91e8c" stroke="#fff" stroke-width="2"/>
+      <title>NT$ ${fmt(p.v)}</title>`).join('');
+    socialLegend = `<circle cx="520" cy="16" r="5" fill="#e91e8c"/>
+      <text x="530" y="20" font-size="12" fill="#555">FB+IG 營收</text>`;
+  }
+
+  // X axis labels
+  const xLabels = monthly.map((m,i)=>`
+    <text x="${xPos(i)}" y="${padT+chartH+18}" text-anchor="middle" font-size="11" fill="#666">${m.month}</text>`).join('');
+
+  // Total dots with tooltip
+  const totalDots = totalPts.map(p=>`
+    <circle cx="${p.x}" cy="${p.y}" r="5" fill="#f39c12" stroke="#fff" stroke-width="2">
+      <title>NT$ ${fmt(p.v)}</title></circle>`).join('');
+
+  return `<div style="overflow-x:auto;">
+  <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;font-family:inherit;">
+    <!-- grid & y axis -->
+    ${yTicks}
+    <!-- area fills -->
+    ${showSocial ? `<path d="${socialArea}" fill="#e91e8c" opacity=".08"/>` : ''}
+    <path d="${totalArea}" fill="#f39c12" opacity=".10"/>
+    <!-- lines -->
+    ${showSocial ? `<path d="${socialPath}" fill="none" stroke="#e91e8c" stroke-width="2.5" stroke-linejoin="round"/>` : ''}
+    <path d="${totalPath}" fill="none" stroke="#f39c12" stroke-width="3" stroke-linejoin="round"/>
+    <!-- dots -->
+    ${showSocial ? socialDots : ''}
+    ${totalDots}
+    <!-- x labels -->
+    ${xLabels}
+    <!-- axes -->
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#ccc" stroke-width="1"/>
+    <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#ccc" stroke-width="1"/>
+    <!-- legend -->
+    <circle cx="8" cy="16" r="5" fill="#f39c12"/>
+    <text x="18" y="20" font-size="12" fill="#555">總營收</text>
+    ${socialLegend}
+  </svg></div>`;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
