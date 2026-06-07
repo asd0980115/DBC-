@@ -109,8 +109,8 @@ tr:hover td{background:#fafbff;}
 .roas-card .card-title{color:#a0c4ff;border-color:#a0c4ff;}
 .roas-inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
 .roas-inputs label{font-size:.8rem;color:#a0c4ff;margin-bottom:5px;display:block;font-weight:600;}
-.roas-inputs input{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:7px;padding:9px 11px;width:100%;font-size:.95rem;font-weight:700;caret-color:#fff;}
-.roas-inputs input::placeholder{color:rgba(255,255,255,.35);}
+.roas-inputs input{background:#fff;border:1px solid rgba(255,255,255,.4);color:#111;border-radius:7px;padding:9px 11px;width:100%;font-size:.95rem;font-weight:700;caret-color:#111;}
+.roas-inputs input::placeholder{color:#aaa;}
 .roas-inputs input:focus{outline:none;border-color:#a0c4ff;}
 .roas-result{background:rgba(255,255,255,.06);border-radius:10px;padding:16px 20px;display:flex;gap:24px;flex-wrap:wrap;}
 .roas-metric .rl{font-size:.72rem;color:#a0c4ff;font-weight:600;margin-bottom:4px;}
@@ -636,10 +636,17 @@ function renderTreat(monthFilter) {
 
 // ─── ROAS ─────────────────────────────────────────────────────────────────────
 let roasMonthFilter = null;
+const adCostStore = {}; // store ad spend per month key ('全部' or month name)
+
+function roasKey() { return roasMonthFilter || '全部'; }
 
 function buildRoasPicker() {
   buildMonthPicker('roasMonthPicker', (month) => {
+    // Save current input before switching
+    adCostStore[roasKey()] = document.getElementById('adCost').value;
     roasMonthFilter = month;
+    // Restore saved value for new selection
+    document.getElementById('adCost').value = adCostStore[roasKey()] || '';
     document.getElementById('roasCostLabel').textContent = `廣告費用 — ${month||'全部'}（NT$）`;
     document.getElementById('rRevLabel').textContent = month ? `${month} 營收` : '總營收';
     document.getElementById('roasHint').innerHTML = month
@@ -653,8 +660,9 @@ function buildRoasPicker() {
 function calcRoas() {
   const ms = roasMonthFilter ? G.monthly.filter(m=>m.month===roasMonthFilter) : (G.monthly||[]);
   const totalRev = ms.reduce((s,m)=>s+m.fee, 0);
-  const adCost   = parseFloat(document.getElementById('adCost').value)||0;
-  const roas     = adCost > 0 ? totalRev / adCost : null;
+  adCostStore[roasKey()] = document.getElementById('adCost').value;
+  const adCost = parseFloat(adCostStore[roasKey()])||0;
+  const roas   = adCost > 0 ? totalRev / adCost : null;
 
   document.getElementById('rTotalRev').textContent = 'NT$ '+fmt(totalRev);
   document.getElementById('rAdCost').textContent   = adCost > 0 ? 'NT$ '+fmt(adCost) : '（未填寫）';
