@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自費療程月報統計</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --primary:#4f7fe0; --primary-dark:#3563c4;
+  --bg:#f4f6fb; --card:#fff; --border:#e0e6f0;
+  --text:#2c3e50; --muted:#7f8c9a;
+  --green:#27ae60; --red:#e74c3c; --yellow:#f39c12; --purple:#8e44ad;
+  --blue-fb:#1877f2; --pink-ig:#e1306c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,#4f7fe0,#6c3fc5);color:#fff;padding:16px 32px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+header .icon{font-size:1.8rem;}
+header h1{font-size:1.15rem;font-weight:700;}
+header p{font-size:.78rem;opacity:.8;margin-top:2px;}
+.container{max-width:1100px;margin:24px auto;padding:0 16px;}
+.card{background:var(--card);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:22px 26px;margin-bottom:18px;}
+.card-title{font-size:.95rem;color:var(--primary);border-left:4px solid var(--primary);padding-left:10px;margin-bottom:14px;font-weight:700;}
+
+/* Upload */
+.upload-area{border:2px dashed #b0c4e8;border-radius:10px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#f8fbff;}
+.upload-area:hover,.upload-area.drag{background:#eef4ff;border-color:var(--primary);}
+.upload-area .big-icon{font-size:3rem;}
+.upload-area strong{display:block;margin:8px 0 4px;font-size:.95rem;}
+.upload-area p{font-size:.82rem;color:var(--muted);}
+input[type=file]{display:none;}
+
+/* Step 2 – simplified */
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.chip{padding:5px 14px;border-radius:20px;background:#eef2ff;color:var(--primary);font-size:.82rem;cursor:pointer;border:1.5px solid transparent;transition:all .15s;user-select:none;}
+.chip.on{background:var(--primary);color:#fff;}
+
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;background:#f8fbff;border:1.5px solid var(--border);border-radius:9px;padding:12px 14px;cursor:pointer;transition:all .15s;}
+.check-item:hover{border-color:var(--primary);background:#eef4ff;}
+.check-item.on{border-color:var(--primary);background:#eef4ff;}
+.check-item input[type=checkbox]{margin-top:2px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;cursor:pointer;}
+.check-item .ci-body{}
+.check-item .ci-title{font-size:.88rem;font-weight:700;}
+.check-item .ci-desc{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.col-sel{margin-top:6px;}
+.col-sel select{font-size:.8rem;padding:4px 7px;border:1px solid var(--border);border-radius:6px;width:100%;background:#fff;}
+.section-label{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.9rem;font-weight:700;transition:all .2s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-ghost{background:#eef2f7;color:var(--text);}
+.btn-ghost:hover{background:#dde4ef;}
+.actions{display:flex;gap:10px;margin-top:16px;}
+.error-msg{color:var(--red);background:#fdf3f2;border:1px solid #f5c6c1;padding:8px 12px;border-radius:7px;margin-top:8px;font-size:.86rem;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:0;}
+.kpi{border-radius:10px;padding:16px 18px;border:1px solid var(--border);background:#fff;}
+.kpi .lbl{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:5px;}
+.kpi .val{font-size:1.55rem;font-weight:800;}
+.kpi .sub{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.kpi.blue .val{color:var(--primary);} .kpi.green .val{color:var(--green);}
+.kpi.yellow .val{color:var(--yellow);} .kpi.purple .val{color:var(--purple);}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+.tab{padding:7px 15px;font-size:.85rem;cursor:pointer;border-radius:6px 6px 0 0;color:var(--muted);font-weight:700;border:1px solid transparent;margin-bottom:-2px;}
+.tab.active{color:var(--primary);border-color:var(--border);border-bottom-color:#fff;background:#fff;}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+
+/* Donut */
+.donut-wrap{display:flex;gap:28px;flex-wrap:wrap;align-items:center;}
+.donut{position:relative;width:140px;height:140px;flex-shrink:0;}
+.donut svg{transform:rotate(-90deg);}
+.donut-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.donut-label .d-val{font-size:1.4rem;font-weight:800;}
+.donut-label .d-lbl{font-size:.7rem;color:var(--muted);}
+.legend{display:flex;flex-direction:column;gap:7px;flex:1;min-width:140px;}
+.legend-item{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.83rem;}
+.legend-item .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-item .name{flex:1;}
+.legend-item .count{font-weight:700;}
+.legend-item .pct{color:var(--muted);font-size:.75rem;min-width:36px;text-align:right;}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th{background:#eef2ff;color:var(--primary);padding:8px 11px;text-align:left;font-weight:700;white-space:nowrap;}
+td{padding:7px 11px;border-bottom:1px solid #f0f3fa;white-space:nowrap;vertical-align:middle;}
+tr:hover td{background:#fafbff;}
+.bar-wrap{display:flex;align-items:center;gap:7px;}
+.bar{height:7px;border-radius:4px;min-width:2px;}
+
+/* Month cards */
+.month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.mcard{border:1px solid var(--border);border-radius:10px;padding:16px;}
+.mcard h3{font-size:.9rem;color:var(--primary);font-weight:700;margin-bottom:10px;}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f2f4f8;font-size:.84rem;}
+.mrow:last-child{border:none;}
+.mrow .mv{font-weight:700;} .mrow .mv.green{color:var(--green);}
+.tag-new{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:700;}
+.tag-old{background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:.75rem;}
+
+/* ROAS */
+.roas-card{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:12px;padding:22px 24px;}
+.roas-card .card-title{color:#a0c4ff;border-color:#a0c4ff;}
+.roas-inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.roas-inputs label{font-size:.8rem;color:#a0c4ff;margin-bottom:5px;display:block;font-weight:600;}
+.roas-inputs input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:7px;padding:9px 11px;width:100%;font-size:.95rem;}
+.roas-inputs input::placeholder{color:rgba(255,255,255,.35);}
+.roas-inputs input:focus{outline:none;border-color:#a0c4ff;}
+.roas-result{background:rgba(255,255,255,.06);border-radius:10px;padding:16px 20px;display:flex;gap:24px;flex-wrap:wrap;}
+.roas-metric .rl{font-size:.72rem;color:#a0c4ff;font-weight:600;margin-bottom:4px;}
+.roas-metric .rv{font-size:1.8rem;font-weight:800;}
+.roas-metric .rv.good{color:#4ade80;} .roas-metric .rv.mid{color:#facc15;} .roas-metric .rv.bad{color:#f87171;}
+.roas-note{font-size:.76rem;color:#8aabcc;margin-bottom:12px;}
+
+.hidden{display:none!important;}
+.badge-fb{background:var(--blue-fb);color:#fff;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
+.badge-ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
+
+input[type=text],input[type=number],select{padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:.86rem;background:#fafbfd;}
+input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border-color:var(--primary);}
+</style>
+</head>
+<body>
+<header>
+  <div class="icon">📊</div>
+  <div>
+    <h1>自費療程月報統計系統</h1>
+    <p>上傳 Excel → 自動產生新舊客、來源管道、療程、營收、ROAS 完整報表</p>
+  </div>
+</header>
+<div class="container">
+
+<!-- ① Upload -->
+<div class="card" id="s1">
+  <div class="card-title">① 上傳 Excel 檔案</div>
+  <div class="upload-area" id="dropZone">
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <div class="big-icon">📂</div>
+    <strong>點擊選擇或拖曳 Excel 到這裡</strong>
+    <p>支援 .xlsx / .xls　每個分頁 = 一個月份</p>
+  </div>
+  <div id="err1" class="error-msg hidden"></div>
+</div>
+
+<!-- ② Config -->
+<div class="card hidden" id="s2">
+  <div class="card-title">② 選擇要統計的項目</div>
+
+  <div class="section-label" style="margin-bottom:8px;">選擇月份分頁（可多選）</div>
+  <div class="chip-row" id="sheetChips"></div>
+
+  <div class="section-label" style="margin-bottom:10px;">勾選需要的統計數據，並確認對應欄位</div>
+  <div class="check-grid" id="checkGrid">
+
+    <label class="check-item on" id="ci-newold">
+      <input type="checkbox" id="ck-newold" checked>
+      <div class="ci-body">
+        <div class="ci-title">👥 新舊客人數與比例</div>
+        <div class="ci-desc">統計新客/舊客各有多少、佔比</div>
+        <div class="col-sel"><select id="col-newold"><option value="">自動偵測</option></select></div>
+        <div class="col-sel" style="margin-top:6px;">
+          <input type="text" id="newVals" placeholder="新客標記值（逗號分隔）" value="新,新客,Y,y,yes,是,1,true,new" style="font-size:.78rem;padding:4px 7px;">
+        </div>
+      </div>
+    </label>
+
+    <label class="check-item on" id="ci-source">
+      <input type="checkbox" id="ck-source" checked>
+      <div class="ci-body">
+        <div class="ci-title">📍 如何得知本診所</div>
+        <div class="ci-desc">各來源管道人數與佔比</div>
+        <div class="col-sel"><select id="col-source"><option value="">自動偵測</option></select></div>
+        <div class="col-sel" style="margin-top:6px;display:flex;gap:4px;">
+          <input type="text" id="fbKws" placeholder="FB關鍵字" value="Facebook,FB,臉書,fb" style="font-size:.75rem;padding:4px 6px;flex:1;">
+          <input type="text" id="igKws" placeholder="IG關鍵字" value="Instagram,IG,ig,instagram" style="font-size:.75rem;padding:4px 6px;flex:1;">
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:3px;">← FB 關鍵字 ／ IG 關鍵字 →</div>
+      </div>
+    </label>
+
+    <label class="check-item on" id="ci-treat">
+      <input type="checkbox" id="ck-treat" checked>
+      <div class="ci-body">
+        <div class="ci-title">💆 諮詢療程數量</div>
+        <div class="ci-desc">各療程施作次數統計</div>
+        <div class="col-sel"><select id="col-treat"><option value="">自動偵測</option></select></div>
+      </div>
+    </label>
+
+    <label class="check-item on" id="ci-fee">
+      <input type="checkbox" id="ck-fee" checked>
+      <div class="ci-body">
+        <div class="ci-title">💰 總營收</div>
+        <div class="ci-desc">加總所有收費金額</div>
+        <div class="col-sel"><select id="col-fee"><option value="">自動偵測</option></select></div>
+      </div>
+    </label>
+
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="analyzeBtn">🔍 開始統計</button>
+    <button class="btn btn-ghost" id="reuploadBtn">↩ 重新上傳</button>
+  </div>
+  <div id="err2" class="error-msg hidden"></div>
+</div>
+
+<!-- ③ Results -->
+<div id="s3" class="hidden">
+
+  <div class="card">
+    <div class="card-title">📈 整體總覽</div>
+    <div id="kpiMonthPicker" class="chip-row" style="margin-bottom:14px;"></div>
+    <div class="kpi-row" id="kpiRow"></div>
+  </div>
+
+  <div class="roas-card card">
+    <div class="card-title">📣 廣告 ROAS 計算機</div>
+    <div class="roas-note">計算方式：營收 ÷ 廣告費用。選擇月份後填寫廣告費用，系統自動帶入對應營收。</div>
+    <div id="roasMonthPicker" class="chip-row" style="margin-bottom:14px;"></div>
+    <div class="roas-inputs">
+      <div>
+        <label id="roasCostLabel">廣告費用（NT$）</label>
+        <input type="number" id="adCost" placeholder="例：23000" oninput="calcRoas()">
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
+        <div style="font-size:.82rem;color:#8aabcc;line-height:1.5;" id="roasHint">
+          填入對應月份的廣告花費（FB + IG 合計）<br>即可算出 ROAS
+        </div>
+      </div>
+    </div>
+    <div class="roas-result">
+      <div class="roas-metric"><div class="rl" id="rRevLabel">總營收</div><div class="rv" id="rTotalRev">—</div></div>
+      <div class="roas-metric"><div class="rl">廣告費用</div><div class="rv" id="rAdCost">—</div></div>
+      <div class="roas-metric"><div class="rl">ROAS</div><div class="rv" id="rRoas">—</div></div>
+      <div class="roas-metric"><div class="rl">解讀</div><div class="rv" style="font-size:.9rem;line-height:1.4;" id="rExplain">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" data-tab="monthly">各月明細</div>
+      <div class="tab" data-tab="newold">新舊客分析</div>
+      <div class="tab" data-tab="source">來源管道</div>
+      <div class="tab" data-tab="treatment">療程統計</div>
+      <div class="tab" data-tab="revenue">營收趨勢</div>
+    </div>
+    <div id="tab-monthly"   class="tab-panel active"><div class="month-grid" id="monthGrid"></div></div>
+    <div id="tab-newold"    class="tab-panel"><div id="newoldContent"></div></div>
+    <div id="tab-source"    class="tab-panel"><div id="sourceMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="sourceContent"></div></div>
+    <div id="tab-treatment" class="tab-panel"><div id="treatMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="treatContent"></div></div>
+    <div id="tab-revenue"   class="tab-panel"><div id="revContent"></div></div>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <button class="btn btn-ghost" id="backBtn">← 返回修改設定</button>
+  </div>
+</div>
+
+</div>
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let wb = null, previewRows = [], allCols = [], gTotalFee = 0;
+
+// ─── Upload ───────────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) readFile(fileInput.files[0]); });
+
+function readFile(file) {
+  if (!file.name.match(/\.(xlsx|xls)$/i)) { showErr('err1','請上傳 .xlsx 或 .xls 格式'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try { wb = XLSX.read(e.target.result, { type:'array', cellDates:true }); buildConfig(); }
+    catch(ex) { showErr('err1','讀取失敗：'+ex.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ─── Checkbox toggle ──────────────────────────────────────────────────────────
+['newold','source','treat','fee'].forEach(k => {
+  const ci = document.getElementById('ci-'+k);
+  const ck = document.getElementById('ck-'+k);
+  ck.addEventListener('change', () => ci.classList.toggle('on', ck.checked));
+  ci.addEventListener('click', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION') return;
+    ck.checked = !ck.checked; ci.classList.toggle('on', ck.checked);
+  });
+});
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+function buildConfig() {
+  const chips = document.getElementById('sheetChips');
+  chips.innerHTML = '';
+  wb.SheetNames.forEach(name => {
+    const c = mkEl('div','chip on'); c.textContent = name; c.dataset.sheet = name;
+    c.addEventListener('click', () => c.classList.toggle('on'));
+    chips.appendChild(c);
+  });
+
+  const firstSheet = wb.Sheets[wb.SheetNames[0]];
+  // Use raw array parse to detect header row
+  const raw = XLSX.utils.sheet_to_json(firstSheet, { header:1, defval:'' });
+  previewRows = raw;
+  // Find likely header row (first row with ≥3 non-empty cells)
+  let autoHeader = 0;
+  for (let i = 0; i < Math.min(5, raw.length); i++) {
+    if (raw[i].filter(c => c !== '' && c !== null).length >= 3) { autoHeader = i; break; }
+  }
+  allCols = (raw[autoHeader]||[]).map(c => String(c).trim()).filter(Boolean);
+  fillColSelects();
+  autoGuess();
+  show('s2'); hide('s1'); hide('s3');
+}
+
+function fillColSelects() {
+  ['col-newold','col-source','col-treat','col-fee'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">自動偵測</option>';
+    allCols.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      if (c === cur) o.selected = true;
+      sel.appendChild(o);
+    });
+  });
+}
+
+function autoGuess() {
+  const map = {
+    'col-newold': ['新舊','新/舊','新舊客','是否新客','類型','客別','身份'],
+    'col-source':  ['得知','如何','來源','管道','介紹','channel','行銷'],
+    'col-treat':   ['諮詢','療程','項目','服務','treatment','諮詢內容'],
+    'col-fee':     ['收費','費用','金額','price','fee','實收','消費','收費金額'],
+  };
+  Object.entries(map).forEach(([id, kws]) => {
+    const sel = document.getElementById(id);
+    if (sel.value) return;
+    const m = allCols.find(c => kws.some(k => c.toLowerCase().includes(k.toLowerCase())));
+    if (m) sel.value = m;
+  });
+}
+
+// ─── Get column value (handle auto-detect = first matching guess) ─────────────
+function resolveCol(selectId, guessKws) {
+  const sel = document.getElementById(selectId);
+  if (sel.value) return sel.value;
+  // fallback: pick from allCols
+  const m = allCols.find(c => guessKws.some(k => c.toLowerCase().includes(k.toLowerCase())));
+  return m || '';
+}
+
+// ─── Parse sheet data ─────────────────────────────────────────────────────────
+function getSheetRows(sheetName) {
+  const sheet = wb.Sheets[sheetName];
+  const raw = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
+  // find header row (first row with ≥3 non-empty cells)
+  let hr = 0;
+  for (let i = 0; i < Math.min(5, raw.length); i++) {
+    if (raw[i].filter(c => c !== '' && c !== null).length >= 3) { hr = i; break; }
+  }
+  const headers = (raw[hr]||[]).map(h => String(h).trim());
+  return raw.slice(hr+1)
+    .map(r => { const o={}; headers.forEach((h,i) => { o[h] = r[i] ?? ''; }); return o; })
+    .filter(r => headers.some(h => h) && Object.values(r).some(v => v !== '' && v !== null && v !== undefined));
+}
+
+// ─── Robust fee parser ────────────────────────────────────────────────────────
+function parseFee(val) {
+  if (typeof val === 'number') return isFinite(val) ? val : 0;
+  if (val === null || val === undefined || val === '') return 0;
+  // Remove currency symbols, spaces, commas (thousand separators)
+  const cleaned = String(val).replace(/[NT$＄,，\s]/g,'').replace(/[^\d.-]/g,'');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+function kws(str) { return str.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean); }
+
+// ─── Analyze ─────────────────────────────────────────────────────────────────
+document.getElementById('analyzeBtn').addEventListener('click', analyze);
+document.getElementById('reuploadBtn').addEventListener('click', () => { show('s1'); hide('s2'); hide('s3'); });
+document.getElementById('backBtn').addEventListener('click', () => { show('s2'); hide('s3'); });
+
+function analyze() {
+  showErr('err2','');
+  const sheets = [...document.querySelectorAll('#sheetChips .chip.on')].map(c=>c.dataset.sheet);
+  if (!sheets.length) { showErr('err2','請至少選擇一個月份'); return; }
+
+  const useNewOld = document.getElementById('ck-newold').checked;
+  const useSource = document.getElementById('ck-source').checked;
+  const useTreat  = document.getElementById('ck-treat').checked;
+  const useFee    = document.getElementById('ck-fee').checked;
+
+  const colNewOld = resolveCol('col-newold', ['新舊','新/舊','客別','身份']);
+  const colSource = resolveCol('col-source', ['得知','如何','來源','管道']);
+  const colTreat  = resolveCol('col-treat',  ['諮詢內容','諮詢','療程','項目']);
+  const colFee    = resolveCol('col-fee',    ['收費金額','收費','費用','金額']);
+  const newVals   = kws(document.getElementById('newVals').value);
+  const fbKws2    = kws(document.getElementById('fbKws').value);
+  const igKws2    = kws(document.getElementById('igKws').value);
+
+  const monthly = [];
+  let grandTotal=0, grandNew=0, grandOld=0, grandFee=0;
+  const allSources={}, allTreats={};
+
+  sheets.forEach(sheetName => {
+    const rows = getSheetRows(sheetName);
+    let newC=0, oldC=0, fee=0, socialFee=0;
+    const sources={}, treats={};
+
+    rows.forEach(r => {
+      // new/old
+      if (useNewOld && colNewOld) {
+        const v = String(r[colNewOld]??'').trim().toLowerCase();
+        if (newVals.includes(v)) newC++; else oldC++;
+      }
+      // fee — sum every row (no NaN filter that drops zeros)
+      const rowFee = (useFee && colFee) ? parseFee(r[colFee]) : 0;
+      if (useFee && colFee) fee += rowFee;
+      // source
+      if (useSource && colSource) {
+        const v = String(r[colSource]??'').trim();
+        if (v) {
+          sources[v]=(sources[v]||0)+1; allSources[v]=(allSources[v]||0)+1;
+          const vl = v.toLowerCase();
+          const isSocial = fbKws2.some(k=>vl.includes(k)) || igKws2.some(k=>vl.includes(k));
+          if (isSocial) socialFee += rowFee;
+        }
+      }
+      // treatment — split on common delimiters
+      if (useTreat && colTreat) {
+        const raw = String(r[colTreat]??'').trim();
+        if (raw) {
+          raw.split(/[,，、；;\/＋+&]+/).map(t=>t.trim()).filter(Boolean).forEach(t => {
+            treats[t]=(treats[t]||0)+1; allTreats[t]=(allTreats[t]||0)+1;
+          });
+        }
+      }
+    });
+
+    grandTotal += rows.length;
+    grandNew  += newC; grandOld += oldC; grandFee += fee;
+    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, socialFee, sources, treats });
+  });
+
+  gTotalFee = grandFee;
+  document.getElementById('adCost').value = '';
+  calcRoas();
+
+  renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
+    useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource });
+}
+
+// ─── Global result state (for month filter re-renders) ───────────────────────
+let G = {};
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+const COLORS = ['#4f7fe0','#27ae60','#f39c12','#e74c3c','#8e44ad','#1abc9c','#e91e8c','#0288d1','#f06292','#558b2f'];
+
+function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
+    useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource }) {
+
+  // Save state for filter callbacks
+  G = { monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
+        useNewOld, useSource, useTreat, useFee };
+
+  // Build month pickers for each section
+  buildMonthPicker('kpiMonthPicker',    renderKpi,    null);
+  buildMonthPicker('sourceMonthPicker', renderSource, null);
+  buildMonthPicker('treatMonthPicker',  renderTreat,  null);
+
+  // Initial renders (全部)
+  renderKpi(null);
+  renderSource(null);
+  renderTreat(null);
+
+  // Monthly cards (always shows all months side by side)
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+  monthly.forEach(m => {
+    const c = mkEl('div','mcard');
+    let h = `<h3>📅 ${m.month}</h3>`;
+    h += mrow('總客次', m.total+'人');
+    if (useNewOld) {
+      h += mrow('新客', `<span class="tag-new">新 ${m.newC}人</span>&nbsp;${pct(m.newC,m.total)}`);
+      h += mrow('舊客', `<span class="tag-old">舊 ${m.oldC}人</span>&nbsp;${pct(m.oldC,m.total)}`);
+    }
+    if (useFee) {
+      h += mrow('本月營收', 'NT$ '+fmt(m.fee), 'green');
+      if (m.total) h += mrow('客均消費', 'NT$ '+fmt(m.fee/m.total));
+    }
+    if (useSource && Object.keys(m.sources).length) {
+      const top = topN(m.sources,1)[0];
+      h += mrow('最大來源', `${top[0]}（${top[1]}人）`);
+    }
+    if (useTreat && Object.keys(m.treats).length) {
+      const top = topN(m.treats,1)[0];
+      h += mrow('最熱療程', `${top[0]}（${top[1]}次）`);
+    }
+    c.innerHTML = h; grid.appendChild(c);
+  });
+
+  // New/Old tab
+  if (useNewOld) {
+    const segs = [{label:'新客',count:grandNew},{label:'舊客',count:grandOld}];
+    const cols2 = ['#27ae60','#8e44ad'];
+    document.getElementById('newoldContent').innerHTML =
+      `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(segs,cols2,grandTotal,'客次')}`+
+      legendHtml(segs,cols2,grandTotal)+'</div>'+
+      '<div class="tbl-wrap">'+monthlyNewOldTbl(monthly)+'</div>';
+  } else document.getElementById('newoldContent').innerHTML = noData();
+
+  // Revenue tab
+  if (useFee) {
+    const showSocial = useSource && monthly.some(m=>m.socialFee>0);
+    document.getElementById('revContent').innerHTML =
+      lineChart(monthly, showSocial) +
+      '<div class="tbl-wrap" style="margin-top:20px;">' +
+      barTable(
+        ['月份','客次','總營收', showSocial?'FB+IG 營收':null,'客均消費'].filter(Boolean),
+        monthly.map(m => [
+          `<b>${m.month}</b>`,
+          m.total,
+          `<b style="color:var(--yellow)">NT$ ${fmt(m.fee)}</b>`,
+          showSocial ? `NT$ ${fmt(m.socialFee)}` : null,
+          m.total ? `NT$ ${fmt(m.fee/m.total)}` : '—',
+        ].filter(v=>v!==null))
+      ) + '</div>';
+  } else document.getElementById('revContent').innerHTML = noData();
+
+  // ROAS
+  document.getElementById('adCost').value = '';
+  buildRoasPicker();
+  calcRoas();
+
+  show('s3'); hide('s1'); hide('s2'); switchTab('monthly');
+}
+
+// ─── Month picker builder ─────────────────────────────────────────────────────
+function buildMonthPicker(containerId, renderFn, activeSel) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  // "全部" chip
+  const all = mkEl('div', 'chip' + (activeSel===null?' on':''));
+  all.textContent = '全部';
+  all.addEventListener('click', () => { setActive(wrap, all); renderFn(null); });
+  wrap.appendChild(all);
+  // Month chips
+  G.monthly.forEach(m => {
+    const chip = mkEl('div', 'chip' + (activeSel===m.month?' on':''));
+    chip.textContent = m.month;
+    chip.addEventListener('click', () => { setActive(wrap, chip); renderFn(m.month); });
+    wrap.appendChild(chip);
+  });
+}
+function setActive(wrap, active) {
+  wrap.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  active.classList.add('on');
+}
+
+// ─── KPI render (with optional month filter) ──────────────────────────────────
+function renderKpi(monthFilter) {
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  const total   = ms.reduce((s,m)=>s+m.total,0);
+  const newC    = ms.reduce((s,m)=>s+m.newC,0);
+  const oldC    = ms.reduce((s,m)=>s+m.oldC,0);
+  const fee     = ms.reduce((s,m)=>s+m.fee,0);
+  const row = document.getElementById('kpiRow');
+  row.innerHTML = '';
+  const sub = monthFilter ? monthFilter : `共 ${G.monthly.length} 個月`;
+  addKpi(row, '總客次', total+'人', sub, 'blue');
+  if (G.useNewOld) {
+    addKpi(row, '新客人數', newC+'人', `佔比 ${pct(newC,total)}`, 'green');
+    addKpi(row, '舊客人數', oldC+'人', `佔比 ${pct(oldC,total)}`, 'purple');
+  }
+  if (G.useFee) {
+    const label = monthFilter ? '本月營收' : '總營收';
+    const sub2  = monthFilter ? `客均 NT$ ${total?fmt(fee/total):'—'}` : `月均 NT$ ${fmt(fee/ms.length)}`;
+    addKpi(row, label, 'NT$ '+fmt(fee), sub2, 'yellow');
+    if (total) addKpi(row, '客均消費', 'NT$ '+fmt(fee/total), '每位客人平均', 'yellow');
+  }
+}
+
+// ─── Source render (with optional month filter) ───────────────────────────────
+function renderSource(monthFilter) {
+  if (!G.useSource) { document.getElementById('sourceContent').innerHTML = noData(); return; }
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  // Merge sources from selected months
+  const merged = {};
+  ms.forEach(m => Object.entries(m.sources).forEach(([k,v]) => { merged[k]=(merged[k]||0)+v; }));
+  const sorted = topN(merged, 20);
+  if (!sorted.length) { document.getElementById('sourceContent').innerHTML = '<p style="color:var(--muted);padding:16px;">此月份無來源資料</p>'; return; }
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+  const maxV  = sorted[0][1];
+  const top10 = sorted.slice(0,10);
+  document.getElementById('sourceContent').innerHTML =
+    `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'來源')}`+
+    legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
+    '<div class="tbl-wrap">'+barTable(['來源管道','人次','佔比','分佈'], sorted.map(([src,cnt],i)=>[
+      src, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
+    ]))+'</div>';
+}
+
+// ─── Treatment render (with optional month filter) ────────────────────────────
+function renderTreat(monthFilter) {
+  if (!G.useTreat) { document.getElementById('treatContent').innerHTML = noData(); return; }
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  const merged = {};
+  ms.forEach(m => Object.entries(m.treats).forEach(([k,v]) => { merged[k]=(merged[k]||0)+v; }));
+  const sorted = topN(merged, 50);
+  if (!sorted.length) { document.getElementById('treatContent').innerHTML = '<p style="color:var(--muted);padding:16px;">此月份無療程資料</p>'; return; }
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+  const maxV  = sorted[0][1];
+  const top10 = sorted.slice(0,10);
+  document.getElementById('treatContent').innerHTML =
+    `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'療程次數')}`+
+    legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
+    '<div class="tbl-wrap">'+barTable(['療程項目','施作次數','佔比','分佈'], sorted.map(([t,cnt],i)=>[
+      t, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
+    ]))+'</div>';
+}
+
+
+// ─── ROAS ─────────────────────────────────────────────────────────────────────
+let roasMonthFilter = null; // null = 全部
+
+function buildRoasPicker() {
+  buildMonthPicker('roasMonthPicker', (month) => {
+    roasMonthFilter = month;
+    document.getElementById('adCost').value = '';
+    const label = month || '全部';
+    document.getElementById('roasCostLabel').textContent = `廣告費用 — ${label}（NT$）`;
+    document.getElementById('rRevLabel').textContent = month ? `${month} 營收` : '總營收';
+    document.getElementById('roasHint').innerHTML = month
+      ? `填入 <b>${month}</b> 的廣告費用即可算出當月 ROAS`
+      : '填入廣告花費（FB + IG 合計）<br>即可算出整體 ROAS';
+    calcRoas();
+  }, null);
+  roasMonthFilter = null;
+}
+
+function calcRoas() {
+  const ms = roasMonthFilter ? G.monthly.filter(m=>m.month===roasMonthFilter) : (G.monthly||[]);
+  const totalRev = ms.reduce((s,m)=>s+m.fee, 0);
+  const adCost   = parseFloat(document.getElementById('adCost').value)||0;
+  const roas     = adCost > 0 ? totalRev / adCost : null;
+
+  document.getElementById('rTotalRev').textContent = G.useFee ? 'NT$ '+fmt(totalRev) : '—';
+  document.getElementById('rAdCost').textContent   = adCost > 0 ? 'NT$ '+fmt(adCost) : '（未填寫）';
+
+  const roasEl = document.getElementById('rRoas');
+  const expEl  = document.getElementById('rExplain');
+  if (roas === null) {
+    roasEl.textContent='—'; roasEl.className='rv'; expEl.textContent='請填寫廣告費用';
+    expEl.style.color='';
+  } else {
+    roasEl.textContent = roas.toFixed(2);
+    roasEl.className = 'rv '+(roas>=3?'good':roas>=1?'mid':'bad');
+    expEl.textContent = roas>=3 ? '✅ 廣告效益良好' : roas>=1 ? '⚠️ 尚有收益' : '❌ 廣告虧損';
+    expEl.style.color = roas>=3 ? '#4ade80' : roas>=1 ? '#facc15' : '#f87171';
+  }
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='tab-'+name));
+}
+
+// ─── Line Chart (SVG) ────────────────────────────────────────────────────────
+function lineChart(monthly, showSocial) {
+  if (!monthly.length) return '';
+  const W=860, H=320, padL=80, padR=24, padT=24, padB=48;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxVal = Math.max(...monthly.map(m => m.fee), showSocial ? Math.max(...monthly.map(m=>m.socialFee)) : 0, 1);
+  const n = monthly.length;
+
+  function xPos(i) { return padL + (n===1 ? chartW/2 : i * chartW/(n-1)); }
+  function yPos(v) { return padT + chartH - (v/maxVal)*chartH; }
+
+  // Y axis ticks (5 steps)
+  let yTicks = '';
+  for (let t=0; t<=5; t++) {
+    const v = maxVal * t/5;
+    const y = yPos(v);
+    const label = v>=10000 ? (v/10000).toFixed(1)+'萬' : fmt(v);
+    yTicks += `<line x1="${padL-6}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#e8edf5" stroke-width="1"/>`;
+    yTicks += `<text x="${padL-10}" y="${y+4}" text-anchor="end" font-size="11" fill="#9aa">${label}</text>`;
+  }
+
+  // Total fee line
+  const totalPts = monthly.map((m,i)=>({ x:xPos(i), y:yPos(m.fee), v:m.fee }));
+  const totalPath = totalPts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ');
+  const totalArea = totalPath + ` L${totalPts[totalPts.length-1].x},${padT+chartH} L${totalPts[0].x},${padT+chartH} Z`;
+
+  // Social fee line
+  let socialPath='', socialArea='', socialDots='', socialLegend='';
+  if (showSocial) {
+    const sPts = monthly.map((m,i)=>({ x:xPos(i), y:yPos(m.socialFee), v:m.socialFee }));
+    socialPath = sPts.map((p,i)=>(i===0?'M':'L')+p.x+','+p.y).join(' ');
+    socialArea = socialPath + ` L${sPts[sPts.length-1].x},${padT+chartH} L${sPts[0].x},${padT+chartH} Z`;
+    socialDots = sPts.map(p=>`
+      <circle cx="${p.x}" cy="${p.y}" r="5" fill="#e91e8c" stroke="#fff" stroke-width="2"/>
+      <title>NT$ ${fmt(p.v)}</title>`).join('');
+    socialLegend = `<circle cx="520" cy="16" r="5" fill="#e91e8c"/>
+      <text x="530" y="20" font-size="12" fill="#555">FB+IG 營收</text>`;
+  }
+
+  // X axis labels
+  const xLabels = monthly.map((m,i)=>`
+    <text x="${xPos(i)}" y="${padT+chartH+18}" text-anchor="middle" font-size="11" fill="#666">${m.month}</text>`).join('');
+
+  // Total dots with tooltip
+  const totalDots = totalPts.map(p=>`
+    <circle cx="${p.x}" cy="${p.y}" r="5" fill="#f39c12" stroke="#fff" stroke-width="2">
+      <title>NT$ ${fmt(p.v)}</title></circle>`).join('');
+
+  return `<div style="overflow-x:auto;">
+  <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;font-family:inherit;">
+    <!-- grid & y axis -->
+    ${yTicks}
+    <!-- area fills -->
+    ${showSocial ? `<path d="${socialArea}" fill="#e91e8c" opacity=".08"/>` : ''}
+    <path d="${totalArea}" fill="#f39c12" opacity=".10"/>
+    <!-- lines -->
+    ${showSocial ? `<path d="${socialPath}" fill="none" stroke="#e91e8c" stroke-width="2.5" stroke-linejoin="round"/>` : ''}
+    <path d="${totalPath}" fill="none" stroke="#f39c12" stroke-width="3" stroke-linejoin="round"/>
+    <!-- dots -->
+    ${showSocial ? socialDots : ''}
+    ${totalDots}
+    <!-- x labels -->
+    ${xLabels}
+    <!-- axes -->
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#ccc" stroke-width="1"/>
+    <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#ccc" stroke-width="1"/>
+    <!-- legend -->
+    <circle cx="8" cy="16" r="5" fill="#f39c12"/>
+    <text x="18" y="20" font-size="12" fill="#555">總營收</text>
+    ${socialLegend}
+  </svg></div>`;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function mkEl(tag,cls=''){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.toggle('hidden',!msg);}
+function pct(a,b){return b?Math.round(a/b*100)+'%':'0%';}
+function fmt(n){return Math.round(n||0).toLocaleString();}
+function mrow(label,val,cls=''){return `<div class="mrow"><span>${label}</span><span class="mv ${cls}">${val}</span></div>`;}
+function topN(obj,n){return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);}
+function noData(){return '<p style="color:var(--muted);padding:16px;">此項目未勾選或無資料</p>';}
+function addKpi(parent,lbl,val,sub,cls){
+  const d=mkEl('div','kpi '+cls);
+  d.innerHTML=`<div class="lbl">${lbl}</div><div class="val">${val}</div><div class="sub">${sub}</div>`;
+  parent.appendChild(d);
+}
+function barCell(v,max,color){
+  const w=Math.max(2,Math.round((v/max)*160));
+  return `<div class="bar-wrap"><div class="bar" style="width:${w}px;background:${color}"></div></div>`;
+}
+function barTable(headers,rows){
+  let h='<table><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  rows.forEach(r=>{ h+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'; });
+  return h+'</table>';
+}
+function legendHtml(segs,colors,total){
+  return '<div class="legend">'+segs.map((s,i)=>`
+    <div class="legend-item">
+      <div class="dot" style="background:${colors[i]||'#ccc'}"></div>
+      <span class="name">${s.label}</span>
+      <span class="count">${s.count}</span>
+      <span class="pct">${pct(s.count,total)}</span>
+    </div>`).join('')+'</div>';
+}
+function donutSvg(segs,colors,total,centerLabel){
+  const r=54,cx=70,cy=70,stroke=18,circ=2*Math.PI*r;
+  let offset=0,paths='';
+  segs.forEach((s,i)=>{
+    const ratio=total>0?s.count/total:0;
+    const len=ratio*circ;
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i]||'#ccc'}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}"/>`;
+    offset+=len;
+  });
+  return `<div class="donut"><svg width="140" height="140" viewBox="0 0 140 140">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="${stroke}"/>
+    ${paths}</svg>
+    <div class="donut-label"><div class="d-val">${total}</div><div class="d-lbl">${centerLabel}</div></div>
+  </div>`;
+}
+function monthlyNewOldTbl(monthly){
+  let h='<table><tr><th>月份</th><th>總客次</th><th>新客</th><th>新客佔比</th><th>舊客</th><th>舊客佔比</th></tr>';
+  monthly.forEach(m=>{
+    h+=`<tr><td><b>${m.month}</b></td><td>${m.total}</td>
+      <td><span class="tag-new">新 ${m.newC}</span></td><td>${pct(m.newC,m.total)}</td>
+      <td><span class="tag-old">舊 ${m.oldC}</span></td><td>${pct(m.oldC,m.total)}</td></tr>`;
+  });
+  return h+'</table>';
+}
+</script>
+</body>
+</html>
