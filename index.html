@@ -454,9 +454,6 @@ function analyze() {
   });
 
   gTotalFee = grandFee;
-  document.getElementById('adCost').value = '';
-  buildRoasPicker();
-  calcRoas();
 
   renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
     useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource });
@@ -474,6 +471,11 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
   // Save state for filter callbacks
   G = { monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
         useNewOld, useSource, useTreat, useFee };
+
+  // ROAS init (after G is set)
+  document.getElementById('adCost').value = '';
+  buildRoasPicker();
+  calcRoas();
 
   // Build month pickers for each section
   buildMonthPicker('kpiMonthPicker',    renderKpi,    null);
