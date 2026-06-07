@@ -216,6 +216,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
 
   <div class="card">
     <div class="card-title">📈 整體總覽</div>
+    <div id="kpiMonthPicker" class="chip-row" style="margin-bottom:14px;"></div>
     <div class="kpi-row" id="kpiRow"></div>
   </div>
 
@@ -251,8 +252,8 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
     </div>
     <div id="tab-monthly"   class="tab-panel active"><div class="month-grid" id="monthGrid"></div></div>
     <div id="tab-newold"    class="tab-panel"><div id="newoldContent"></div></div>
-    <div id="tab-source"    class="tab-panel"><div id="sourceContent"></div></div>
-    <div id="tab-treatment" class="tab-panel"><div id="treatContent"></div></div>
+    <div id="tab-source"    class="tab-panel"><div id="sourceMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="sourceContent"></div></div>
+    <div id="tab-treatment" class="tab-panel"><div id="treatMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="treatContent"></div></div>
     <div id="tab-revenue"   class="tab-panel"><div id="revContent"></div></div>
   </div>
 
@@ -461,29 +462,30 @@ function analyze() {
     useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource });
 }
 
+// ─── Global result state (for month filter re-renders) ───────────────────────
+let G = {};
+
 // ─── Render ───────────────────────────────────────────────────────────────────
 const COLORS = ['#4f7fe0','#27ae60','#f39c12','#e74c3c','#8e44ad','#1abc9c','#e91e8c','#0288d1','#f06292','#558b2f'];
 
 function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
     useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource }) {
 
-  // ── KPI row ──
-  const kpiRow = document.getElementById('kpiRow');
-  kpiRow.innerHTML = '';
-  addKpi(kpiRow, '總客次', grandTotal+'人', `共 ${monthly.length} 個月`, 'blue');
-  if (useNewOld) {
-    addKpi(kpiRow, '新客人數', grandNew+'人', `佔比 ${pct(grandNew, grandTotal)}`, 'green');
-    addKpi(kpiRow, '舊客人數', grandOld+'人', `佔比 ${pct(grandOld, grandTotal)}`, 'purple');
-  }
-  if (useFee) {
-    addKpi(kpiRow, '總營收', 'NT$ '+fmt(grandFee), `月均 NT$ ${fmt(grandFee/monthly.length)}`, 'yellow');
-    if (grandTotal) addKpi(kpiRow, '客均消費', 'NT$ '+fmt(grandFee/grandTotal), '每位客人平均', 'yellow');
-  }
+  // Save state for filter callbacks
+  G = { monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
+        useNewOld, useSource, useTreat, useFee };
 
-  // update ROAS total rev display
-  document.getElementById('rTotalRev').textContent = useFee ? 'NT$ '+fmt(grandFee) : '—';
+  // Build month pickers for each section
+  buildMonthPicker('kpiMonthPicker',    renderKpi,    null);
+  buildMonthPicker('sourceMonthPicker', renderSource, null);
+  buildMonthPicker('treatMonthPicker',  renderTreat,  null);
 
-  // ── Monthly cards ──
+  // Initial renders (全部)
+  renderKpi(null);
+  renderSource(null);
+  renderTreat(null);
+
+  // Monthly cards (always shows all months side by side)
   const grid = document.getElementById('monthGrid');
   grid.innerHTML = '';
   monthly.forEach(m => {
@@ -495,8 +497,8 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
       h += mrow('舊客', `<span class="tag-old">舊 ${m.oldC}人</span>&nbsp;${pct(m.oldC,m.total)}`);
     }
     if (useFee) {
-      h += mrow('本月營收', 'NT$ '+fmt(m.fee), 'green');
-      if (m.total) h += mrow('客均消費', 'NT$ '+fmt(m.fee/m.total));
+      h += mrow('本月營收', 'NT$ '+fmt(m.fee), 'green');
+      if (m.total) h += mrow('客均消費', 'NT$ '+fmt(m.fee/m.total));
     }
     if (useSource && Object.keys(m.sources).length) {
       const top = topN(m.sources,1)[0];
@@ -509,7 +511,7 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
     c.innerHTML = h; grid.appendChild(c);
   });
 
-  // ── New/Old tab ──
+  // New/Old tab
   if (useNewOld) {
     const segs = [{label:'新客',count:grandNew},{label:'舊客',count:grandOld}];
     const cols2 = ['#27ae60','#8e44ad'];
@@ -519,35 +521,7 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
       '<div class="tbl-wrap">'+monthlyNewOldTbl(monthly)+'</div>';
   } else document.getElementById('newoldContent').innerHTML = noData();
 
-  // ── Source tab ──
-  if (useSource) {
-    const sorted = topN(allSources, 20);
-    const total  = sorted.reduce((s,[,v])=>s+v,0);
-    const maxV   = sorted[0]?.[1]||1;
-    const top10  = sorted.slice(0,10);
-    document.getElementById('sourceContent').innerHTML =
-      `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'來源')}`+
-      legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
-      '<div class="tbl-wrap">'+barTable(['來源管道','人次','佔比','分佈'], sorted.map(([src,cnt],i)=>[
-        src, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
-      ]))+'</div>';
-  } else document.getElementById('sourceContent').innerHTML = noData();
-
-  // ── Treatment tab ──
-  if (useTreat) {
-    const sorted = topN(allTreats, 50);
-    const total  = sorted.reduce((s,[,v])=>s+v,0);
-    const maxV   = sorted[0]?.[1]||1;
-    const top10  = sorted.slice(0,10);
-    document.getElementById('treatContent').innerHTML =
-      `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'療程次數')}`+
-      legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
-      '<div class="tbl-wrap">'+barTable(['療程項目','施作次數','佔比','分佈'], sorted.map(([t,cnt],i)=>[
-        t, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
-      ]))+'</div>';
-  } else document.getElementById('treatContent').innerHTML = noData();
-
-  // ── Revenue tab ──
+  // Revenue tab
   if (useFee) {
     const showSocial = useSource && monthly.some(m=>m.socialFee>0);
     document.getElementById('revContent').innerHTML =
@@ -558,15 +532,106 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
         monthly.map(m => [
           `<b>${m.month}</b>`,
           m.total,
-          `<b style="color:var(--yellow)">NT$ ${fmt(m.fee)}</b>`,
-          showSocial ? `NT$ ${fmt(m.socialFee)}` : null,
-          m.total ? `NT$ ${fmt(m.fee/m.total)}` : '—',
+          `<b style="color:var(--yellow)">NT$ ${fmt(m.fee)}</b>`,
+          showSocial ? `NT$ ${fmt(m.socialFee)}` : null,
+          m.total ? `NT$ ${fmt(m.fee/m.total)}` : '—',
         ].filter(v=>v!==null))
       ) + '</div>';
   } else document.getElementById('revContent').innerHTML = noData();
 
+  // ROAS
+  document.getElementById('rTotalRev').textContent = useFee ? 'NT$ '+fmt(grandFee) : '—';
+  document.getElementById('adCost').value = '';
+  calcRoas();
+
   show('s3'); hide('s1'); hide('s2'); switchTab('monthly');
 }
+
+// ─── Month picker builder ─────────────────────────────────────────────────────
+function buildMonthPicker(containerId, renderFn, activeSel) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  // "全部" chip
+  const all = mkEl('div', 'chip' + (activeSel===null?' on':''));
+  all.textContent = '全部';
+  all.addEventListener('click', () => { setActive(wrap, all); renderFn(null); });
+  wrap.appendChild(all);
+  // Month chips
+  G.monthly.forEach(m => {
+    const chip = mkEl('div', 'chip' + (activeSel===m.month?' on':''));
+    chip.textContent = m.month;
+    chip.addEventListener('click', () => { setActive(wrap, chip); renderFn(m.month); });
+    wrap.appendChild(chip);
+  });
+}
+function setActive(wrap, active) {
+  wrap.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  active.classList.add('on');
+}
+
+// ─── KPI render (with optional month filter) ──────────────────────────────────
+function renderKpi(monthFilter) {
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  const total   = ms.reduce((s,m)=>s+m.total,0);
+  const newC    = ms.reduce((s,m)=>s+m.newC,0);
+  const oldC    = ms.reduce((s,m)=>s+m.oldC,0);
+  const fee     = ms.reduce((s,m)=>s+m.fee,0);
+  const row = document.getElementById('kpiRow');
+  row.innerHTML = '';
+  const sub = monthFilter ? monthFilter : `共 ${G.monthly.length} 個月`;
+  addKpi(row, '總客次', total+'人', sub, 'blue');
+  if (G.useNewOld) {
+    addKpi(row, '新客人數', newC+'人', `佔比 ${pct(newC,total)}`, 'green');
+    addKpi(row, '舊客人數', oldC+'人', `佔比 ${pct(oldC,total)}`, 'purple');
+  }
+  if (G.useFee) {
+    const label = monthFilter ? '本月營收' : '總營收';
+    const sub2  = monthFilter ? `客均 NT$ ${total?fmt(fee/total):'—'}` : `月均 NT$ ${fmt(fee/ms.length)}`;
+    addKpi(row, label, 'NT$ '+fmt(fee), sub2, 'yellow');
+    if (total) addKpi(row, '客均消費', 'NT$ '+fmt(fee/total), '每位客人平均', 'yellow');
+  }
+}
+
+// ─── Source render (with optional month filter) ───────────────────────────────
+function renderSource(monthFilter) {
+  if (!G.useSource) { document.getElementById('sourceContent').innerHTML = noData(); return; }
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  // Merge sources from selected months
+  const merged = {};
+  ms.forEach(m => Object.entries(m.sources).forEach(([k,v]) => { merged[k]=(merged[k]||0)+v; }));
+  const sorted = topN(merged, 20);
+  if (!sorted.length) { document.getElementById('sourceContent').innerHTML = '<p style="color:var(--muted);padding:16px;">此月份無來源資料</p>'; return; }
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+  const maxV  = sorted[0][1];
+  const top10 = sorted.slice(0,10);
+  document.getElementById('sourceContent').innerHTML =
+    `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'來源')}`+
+    legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
+    '<div class="tbl-wrap">'+barTable(['來源管道','人次','佔比','分佈'], sorted.map(([src,cnt],i)=>[
+      src, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
+    ]))+'</div>';
+}
+
+// ─── Treatment render (with optional month filter) ────────────────────────────
+function renderTreat(monthFilter) {
+  if (!G.useTreat) { document.getElementById('treatContent').innerHTML = noData(); return; }
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  const merged = {};
+  ms.forEach(m => Object.entries(m.treats).forEach(([k,v]) => { merged[k]=(merged[k]||0)+v; }));
+  const sorted = topN(merged, 50);
+  if (!sorted.length) { document.getElementById('treatContent').innerHTML = '<p style="color:var(--muted);padding:16px;">此月份無療程資料</p>'; return; }
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+  const maxV  = sorted[0][1];
+  const top10 = sorted.slice(0,10);
+  document.getElementById('treatContent').innerHTML =
+    `<div class="donut-wrap" style="margin-bottom:20px;">${donutSvg(top10.map(([l,c])=>({label:l,count:c})),COLORS,total,'療程次數')}`+
+    legendHtml(top10.map(([l,c])=>({label:l,count:c})),COLORS,total)+'</div>'+
+    '<div class="tbl-wrap">'+barTable(['療程項目','施作次數','佔比','分佈'], sorted.map(([t,cnt],i)=>[
+      t, `<b>${cnt}</b>`, pct(cnt,total), barCell(cnt,maxV,COLORS[i%10])
+    ]))+'</div>';
+}
+
 
 // ─── ROAS ─────────────────────────────────────────────────────────────────────
 function calcRoas() {
