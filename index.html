@@ -247,13 +247,15 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border
       <div class="tab" data-tab="newold">新舊客分析</div>
       <div class="tab" data-tab="source">來源管道</div>
       <div class="tab" data-tab="treatment">療程統計</div>
+      <div class="tab" data-tab="social-treat">FB+IG 療程營收</div>
       <div class="tab" data-tab="revenue">營收趨勢</div>
     </div>
-    <div id="tab-monthly"   class="tab-panel active"><div class="month-grid" id="monthGrid"></div></div>
-    <div id="tab-newold"    class="tab-panel"><div id="newoldContent"></div></div>
-    <div id="tab-source"    class="tab-panel"><div id="sourceMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="sourceContent"></div></div>
-    <div id="tab-treatment" class="tab-panel"><div id="treatMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="treatContent"></div></div>
-    <div id="tab-revenue"   class="tab-panel"><div id="revContent"></div></div>
+    <div id="tab-monthly"      class="tab-panel active"><div class="month-grid" id="monthGrid"></div></div>
+    <div id="tab-newold"       class="tab-panel"><div id="newoldContent"></div></div>
+    <div id="tab-source"       class="tab-panel"><div id="sourceMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="sourceContent"></div></div>
+    <div id="tab-treatment"    class="tab-panel"><div id="treatMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="treatContent"></div></div>
+    <div id="tab-social-treat" class="tab-panel"><div id="socialTreatMonthPicker" class="chip-row" style="margin-bottom:14px;"></div><div id="socialTreatContent"></div></div>
+    <div id="tab-revenue"      class="tab-panel"><div id="revContent"></div></div>
   </div>
 
   <div style="margin-bottom:24px;">
@@ -472,8 +474,14 @@ const COLORS = ['#4f7fe0','#27ae60','#f39c12','#e74c3c','#8e44ad','#1abc9c','#e9
 function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
     useNewOld, useSource, useTreat, useFee, fbKws2, igKws2, colSource }) {
 
+  // Aggregate socialTreats across all months
+  const allSocialTreats = {};
+  monthly.forEach(m => Object.entries(m.socialTreats||{}).forEach(([k,v]) => {
+    allSocialTreats[k] = (allSocialTreats[k]||0)+v;
+  }));
+
   // Save state for filter callbacks
-  G = { monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats,
+  G = { monthly, grandTotal, grandNew, grandOld, grandFee, allSources, allTreats, allSocialTreats,
         useNewOld, useSource, useTreat, useFee };
 
   // ROAS init (after G is set)
@@ -481,14 +489,16 @@ function renderResults({ monthly, grandTotal, grandNew, grandOld, grandFee, allS
   calcRoas();
 
   // Build month pickers for each section
-  buildMonthPicker('kpiMonthPicker',    renderKpi,    null);
-  buildMonthPicker('sourceMonthPicker', renderSource, null);
-  buildMonthPicker('treatMonthPicker',  renderTreat,  null);
+  buildMonthPicker('kpiMonthPicker',         renderKpi,         null);
+  buildMonthPicker('sourceMonthPicker',      renderSource,      null);
+  buildMonthPicker('treatMonthPicker',       renderTreat,       null);
+  buildMonthPicker('socialTreatMonthPicker', renderSocialTreat, null);
 
   // Initial renders (全部)
   renderKpi(null);
   renderSource(null);
   renderTreat(null);
+  renderSocialTreat(null);
 
   // Monthly cards (always shows all months side by side)
   const grid = document.getElementById('monthGrid');
@@ -637,6 +647,42 @@ function renderTreat(monthFilter) {
     ]))+'</div>';
 }
 
+// ─── FB+IG Treatment Revenue render ──────────────────────────────────────────
+function renderSocialTreat(monthFilter) {
+  const el = document.getElementById('socialTreatContent');
+  if (!G.useSource || !G.useTreat || !G.useFee) {
+    el.innerHTML = '<p style="color:var(--muted);padding:16px;">需同時勾選「如何得知本診所」、「諮詢療程數量」與「總營收」才能統計此項目</p>';
+    return;
+  }
+  const ms = monthFilter ? G.monthly.filter(m=>m.month===monthFilter) : G.monthly;
+  const merged = {};
+  ms.forEach(m => Object.entries(m.socialTreats||{}).forEach(([k,v]) => {
+    merged[k] = (merged[k]||0)+v;
+  }));
+  const sorted = topN(merged, 50);
+  if (!sorted.length) {
+    el.innerHTML = '<p style="color:var(--muted);padding:16px;">此月份無 FB/IG 來源的療程營收資料</p>';
+    return;
+  }
+  const grandRev = sorted.reduce((s,[,v])=>s+v,0);
+  const maxV = sorted[0][1];
+  const top10 = sorted.slice(0,10);
+  el.innerHTML =
+    `<p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">統計來自 FB / IG 渠道的客人，各療程帶來的總營收排名</p>`+
+    `<div class="donut-wrap" style="margin-bottom:20px;">
+      ${donutSvg(top10.map(([l,c])=>({label:l,count:c})), COLORS, grandRev, 'FB+IG 營收', true)}
+      ${legendHtml(top10.map(([l,c])=>({label:l,count:c})), COLORS, grandRev, true)}
+    </div>`+
+    '<div class="tbl-wrap">'+barTable(
+      ['療程項目','FB+IG 營收','佔比','分佈'],
+      sorted.map(([t,rev],i)=>[
+        t,
+        `<b style="color:var(--pink-ig)">NT$ ${fmt(rev)}</b>`,
+        pct(rev,grandRev),
+        barCell(rev,maxV,COLORS[i%10])
+      ])
+    )+'</div>';
+}
 
 // ─── ROAS ─────────────────────────────────────────────────────────────────────
 let roasMonthFilter = null;
@@ -788,16 +834,16 @@ function barTable(headers,rows){
   rows.forEach(r=>{ h+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'; });
   return h+'</table>';
 }
-function legendHtml(segs,colors,total){
+function legendHtml(segs,colors,total,isFee=false){
   return '<div class="legend">'+segs.map((s,i)=>`
     <div class="legend-item">
       <div class="dot" style="background:${colors[i]||'#ccc'}"></div>
       <span class="name">${s.label}</span>
-      <span class="count">${s.count}</span>
+      <span class="count">${isFee ? 'NT$ '+fmt(s.count) : s.count}</span>
       <span class="pct">${pct(s.count,total)}</span>
     </div>`).join('')+'</div>';
 }
-function donutSvg(segs,colors,total,centerLabel){
+function donutSvg(segs,colors,total,centerLabel,isFee=false){
   const r=54,cx=70,cy=70,stroke=18,circ=2*Math.PI*r;
   let offset=0,paths='';
   segs.forEach((s,i)=>{
@@ -806,10 +852,11 @@ function donutSvg(segs,colors,total,centerLabel){
     paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i]||'#ccc'}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}"/>`;
     offset+=len;
   });
+  const centerVal = isFee ? (total>=10000?(total/10000).toFixed(1)+'萬':fmt(total)) : total;
   return `<div class="donut"><svg width="140" height="140" viewBox="0 0 140 140">
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="${stroke}"/>
     ${paths}</svg>
-    <div class="donut-label"><div class="d-val">${total}</div><div class="d-lbl">${centerLabel}</div></div>
+    <div class="donut-label"><div class="d-val" style="${isFee?'font-size:1rem;':''}">${centerVal}</div><div class="d-lbl">${centerLabel}</div></div>
   </div>`;
 }
 function monthlyNewOldTbl(monthly){
