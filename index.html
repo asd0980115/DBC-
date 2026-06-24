@@ -416,7 +416,7 @@ function analyze() {
   sheets.forEach(sheetName => {
     const rows = getSheetRows(sheetName);
     let newC=0, oldC=0, fee=0, socialFee=0;
-    const sources={}, treats={};
+    const sources={}, treats={}, socialTreats={};
 
     rows.forEach(r => {
       // new/old
@@ -424,16 +424,17 @@ function analyze() {
         const v = String(r[colNewOld]??'').trim().toLowerCase();
         if (newVals.includes(v)) newC++; else oldC++;
       }
-      // fee — sum every row (no NaN filter that drops zeros)
+      // fee
       const rowFee = (useFee && colFee) ? parseFee(r[colFee]) : 0;
       if (useFee && colFee) fee += rowFee;
-      // source
+      // source — determine isSocial at row scope
+      let isSocial = false;
       if (useSource && colSource) {
         const v = String(r[colSource]??'').trim();
         if (v) {
           sources[v]=(sources[v]||0)+1; allSources[v]=(allSources[v]||0)+1;
           const vl = v.toLowerCase();
-          const isSocial = fbKws2.some(k=>vl.includes(k)) || igKws2.some(k=>vl.includes(k));
+          isSocial = fbKws2.some(k=>vl.includes(k)) || igKws2.some(k=>vl.includes(k));
           if (isSocial) socialFee += rowFee;
         }
       }
@@ -453,7 +454,7 @@ function analyze() {
 
     grandTotal += rows.length;
     grandNew  += newC; grandOld += oldC; grandFee += fee;
-    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, socialFee, sources, treats });
+    monthly.push({ month:sheetName, total:rows.length, newC, oldC, fee, socialFee, sources, treats, socialTreats });
   });
 
   gTotalFee = grandFee;
