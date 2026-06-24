@@ -437,12 +437,15 @@ function analyze() {
           if (isSocial) socialFee += rowFee;
         }
       }
-      // treatment — split on common delimiters
+      // treatment — split on common delimiters, count each separately
       if (useTreat && colTreat) {
         const raw = String(r[colTreat]??'').trim();
         if (raw) {
           raw.split(/[,，、；;\/＋+&]+/).map(t=>t.trim()).filter(Boolean).forEach(t => {
             treats[t]=(treats[t]||0)+1; allTreats[t]=(allTreats[t]||0)+1;
+            if (isSocial && useFee && colFee) {
+              socialTreats[t]=(socialTreats[t]||0)+rowFee;
+            }
           });
         }
       }
