@@ -18,6 +18,8 @@ const getAIClient = () => {
 
 const MODEL_NAME = 'gemini-3-flash-preview';
 
+const SYSTEM_INSTRUCTION = '你是一位專業的台灣在地 SEO 顧問。請務必全程使用「繁體中文」回答，包含所有 JSON 欄位中的文字內容（標題、建議、分析說明等），不要使用英文或簡體中文，專有名詞、程式碼與 HTML 標籤除外。';
+
 const isRetryableError = (err: any): boolean => {
   const code = err?.error?.code ?? err?.code ?? err?.status;
   return code === 503 || code === 429 || code === 'UNAVAILABLE' || code === 'RESOURCE_EXHAUSTED';
@@ -56,7 +58,8 @@ export const fetchKeywordAnalysis = async (topic: string): Promise<AnalysisResul
   const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: `分析主題「${topic}」在台灣的近期搜尋趨勢，找出 6-8 個爆紅或高熱度詞。`,
-    config: { 
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
@@ -96,8 +99,9 @@ export const fetchRelatedKeywords = async (topic: string): Promise<AnalysisResul
   const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: `分析主題「${topic}」的 5-8 個長尾機會詞，避開主詞。`,
-    config: { 
-      tools: [{ googleSearch: {} }], 
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -135,6 +139,7 @@ export const analyzeArticleTitle = async (title: string, kw?: string): Promise<T
     model: MODEL_NAME,
     contents: `診斷標題「${title}」針對核心詞「${kw || ''}」的點擊率。`,
     config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -165,7 +170,8 @@ export const analyzeGSCReport = async (dataA: any, dataB: any): Promise<any> => 
   const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: prompt,
-    config: { 
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -212,7 +218,8 @@ export const fetchAIOverviewAnalysis = async (topic: string): Promise<AIOverview
   const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: `針對主題「${topic}」產出 SGE 策略、FAQ 與 Schema 代碼。`,
-    config: { 
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
@@ -244,7 +251,8 @@ export const analyzeURLDiagnosis = async (content: string): Promise<PageAuditRes
   const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: `診斷內容的 EEAT 品質並提供具體優化建議："""${content}"""`,
-    config: { 
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
