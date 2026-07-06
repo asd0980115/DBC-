@@ -18,6 +18,26 @@ const getAIClient = () => {
 
 const MODEL_NAME = 'gemini-3-flash-preview';
 
+const isRetryableError = (err: any): boolean => {
+  const code = err?.error?.code ?? err?.code ?? err?.status;
+  return code === 503 || code === 429 || code === 'UNAVAILABLE' || code === 'RESOURCE_EXHAUSTED';
+};
+
+const withRetry = async <T,>(fn: () => Promise<T>, retries = 2, baseDelayMs = 1000): Promise<T> => {
+  try {
+    return await fn();
+  } catch (err: any) {
+    if (retries > 0 && isRetryableError(err)) {
+      await new Promise(resolve => setTimeout(resolve, baseDelayMs));
+      return withRetry(fn, retries - 1, baseDelayMs * 2);
+    }
+    if (isRetryableError(err)) {
+      throw new Error('Gemini 模型目前流量較高，請稍後再試一次。');
+    }
+    throw err;
+  }
+};
+
 const extractSources = (response: any): GroundingSource[] => {
   return response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.filter((chunk: any) => chunk.web)
@@ -33,8 +53,8 @@ const extractSources = (response: any): GroundingSource[] => {
 export const fetchKeywordAnalysis = async (topic: string): Promise<AnalysisResult> => {
   const ai = getAIClient();
   if (!ai) throw new Error("請先在頂部設定 API Key");
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME, 
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL_NAME,
     contents: `分析主題「${topic}」在台灣的近期搜尋趨勢，找出 6-8 個爆紅或高熱度詞。`,
     config: { 
       tools: [{ googleSearch: {} }],
@@ -62,7 +82,7 @@ export const fetchKeywordAnalysis = async (topic: string): Promise<AnalysisResul
         }
       }
     }
-  });
+  }));
   const jsonResult = JSON.parse(response.text);
   return { topic, totalVolume: 0, keywords: jsonResult.keywords || [], viewMode: 'trending', sources: extractSources(response) };
 };
@@ -73,8 +93,8 @@ export const fetchKeywordAnalysis = async (topic: string): Promise<AnalysisResul
 export const fetchRelatedKeywords = async (topic: string): Promise<AnalysisResult> => {
   const ai = getAIClient();
   if (!ai) throw new Error("請先在頂部設定 API Key");
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME, 
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL_NAME,
     contents: `分析主題「${topic}」的 5-8 個長尾機會詞，避開主詞。`,
     config: { 
       tools: [{ googleSearch: {} }], 
@@ -100,7 +120,7 @@ export const fetchRelatedKeywords = async (topic: string): Promise<AnalysisResul
         }
       }
     }
-  });
+  }));
   const jsonResult = JSON.parse(response.text);
   return { topic, totalVolume: 0, keywords: jsonResult.keywords || [], viewMode: 'related', sources: extractSources(response) };
 };
@@ -111,10 +131,10 @@ export const fetchRelatedKeywords = async (topic: string): Promise<AnalysisResul
 export const analyzeArticleTitle = async (title: string, kw?: string): Promise<TitleDiagnosis> => {
   const ai = getAIClient();
   if (!ai) throw new Error("請先在頂部設定 API Key");
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME, 
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL_NAME,
     contents: `診斷標題「${title}」針對核心詞「${kw || ''}」的點擊率。`,
-    config: { 
+    config: {
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -125,7 +145,7 @@ export const analyzeArticleTitle = async (title: string, kw?: string): Promise<T
         }
       }
     }
-  });
+  }));
   return JSON.parse(response.text);
 };
 
@@ -142,7 +162,7 @@ export const analyzeGSCReport = async (dataA: any, dataB: any): Promise<any> => 
   
   要求：拒絕模糊大方向。必須提供具體的 HTML 標籤修改、具體要增加的關鍵字內容、以及具體的內連路徑。`;
 
-  const response = await ai.models.generateContent({
+  const response = await withRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: prompt,
     config: { 
@@ -179,7 +199,7 @@ export const analyzeGSCReport = async (dataA: any, dataB: any): Promise<any> => 
         }
       }
     }
-  });
+  }));
   return JSON.parse(response.text);
 };
 
@@ -189,8 +209,8 @@ export const analyzeGSCReport = async (dataA: any, dataB: any): Promise<any> => 
 export const fetchAIOverviewAnalysis = async (topic: string): Promise<AIOverviewResult> => {
   const ai = getAIClient();
   if (!ai) throw new Error("請先在頂部設定 API Key");
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME, 
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL_NAME,
     contents: `針對主題「${topic}」產出 SGE 策略、FAQ 與 Schema 代碼。`,
     config: { 
       tools: [{ googleSearch: {} }],
@@ -210,7 +230,7 @@ export const fetchAIOverviewAnalysis = async (topic: string): Promise<AIOverview
         }
       }
     }
-  });
+  }));
   const jsonResult = JSON.parse(response.text);
   return { ...jsonResult, topic, sources: extractSources(response) };
 };
@@ -221,8 +241,8 @@ export const fetchAIOverviewAnalysis = async (topic: string): Promise<AIOverview
 export const analyzeURLDiagnosis = async (content: string): Promise<PageAuditResult> => {
   const ai = getAIClient();
   if (!ai) throw new Error("請先在頂部設定 API Key");
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME, 
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL_NAME,
     contents: `診斷內容的 EEAT 品質並提供具體優化建議："""${content}"""`,
     config: { 
       responseMimeType: "application/json",
@@ -245,7 +265,7 @@ export const analyzeURLDiagnosis = async (content: string): Promise<PageAuditRes
         }
       }
     }
-  });
+  }));
   const result = JSON.parse(response.text);
   return {
     target: content.substring(0, 50),
