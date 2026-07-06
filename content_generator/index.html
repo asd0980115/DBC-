@@ -62,14 +62,31 @@
   .hint { font-size: 12px; color: #888; margin-top: 4px; }
   .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .row-actions button { margin-top: 0; padding: 4px 10px; font-size: 12px; }
+  .tabs {
+    display: flex; gap: 8px; max-width: 1400px; margin: 0 auto; padding: 12px 16px 0;
+  }
+  .tab-btn {
+    margin-top: 0; padding: 9px 16px; border-radius: 6px 6px 0 0;
+    background: #e5e7eb; color: #1f2430; border: none; cursor: pointer; font-size: 14px;
+  }
+  .tab-btn.active { background: #fff; color: #2f5fed; font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .char-count { font-size: 12px; color: #888; margin-top: 6px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>AI 引用內容產生器（GEO Content Generator）</h1>
-  <p>純靜態版本，不呼叫任何外部 API。依「awoo GEO 分析洞察」規則，把你填寫的數據組裝成方便 AI 引擎引用的內容。所有資料只存在這台瀏覽器（localStorage）。</p>
+  <h1>AI 引用內容產生器</h1>
+  <p>純靜態版本，不呼叫任何外部 API、不需要金鑰。所有資料只存在這台瀏覽器（localStorage）。</p>
 </header>
 
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtnMedical">醫療 GEO 內容產生器</button>
+  <button class="tab-btn" id="tabBtnReview">Google 商家評論回覆產生器</button>
+</div>
+
+<div class="tab-panel active" id="tabMedical">
 <div class="layout">
   <div>
     <div class="card">
@@ -126,6 +143,47 @@
       <button class="secondary" id="copyBtn">複製內容</button>
     </div>
   </div>
+</div>
+</div>
+
+<div class="tab-panel" id="tabReview">
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>輸入資料</h2>
+      <label>主關鍵字</label>
+      <input id="rrMainKeyword" placeholder="例：植牙手術">
+      <label>相關關鍵字（逗號分隔，選填）</label>
+      <input id="rrRelatedKeywords" placeholder="例：牙周治療, 全瓷冠, 數位掃描">
+      <label>品牌名稱</label>
+      <input id="rrBrand" placeholder="例：安心牙醫診所">
+      <label>文風</label>
+      <select id="rrStyle">
+        <option value="專業信賴">專業信賴</option>
+        <option value="親切溫暖">親切溫暖</option>
+        <option value="活潑熱情">活潑熱情</option>
+        <option value="簡潔俐落">簡潔俐落</option>
+      </select>
+      <label>特色優勢（逗號分隔）</label>
+      <input id="rrAdvantages" placeholder="例：專業技術, 貼心服務, 舒適環境">
+      <div class="row-actions">
+        <button id="rrGenerateBtn">產生內容</button>
+        <button class="secondary" id="rrRerollBtn">換一批</button>
+      </div>
+      <div id="rrError" class="error"></div>
+      <div class="hint">內容為模板拼接產生，屬於通用草稿，發布前建議依實際情況微調用詞。</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>產出結果（約 200 字，適合回覆 Google 商家評論）</h2>
+      <div id="rrOutput">尚未生成內容。請填寫左側資料後按「產生內容」。</div>
+      <div id="rrCharCount" class="char-count"></div>
+      <button class="secondary" id="rrCopyBtn">複製內容</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
@@ -359,6 +417,164 @@ el('copyBtn').onclick = () => {
 };
 
 renderKeywordList();
+
+el('tabBtnMedical').onclick = () => switchTab('Medical');
+el('tabBtnReview').onclick = () => switchTab('Review');
+
+function switchTab(name) {
+  ['Medical', 'Review'].forEach(n => {
+    el('tab' + n).classList.toggle('active', n === name);
+    el('tabBtn' + n).classList.toggle('active', n === name);
+  });
+}
+
+const REVIEW_TEMPLATES = {
+  '專業信賴': {
+    opening: [
+      '感謝您對{brand}的信賴與肯定，能為您提供{mainKeyword}相關服務是我們的榮幸。',
+      '謝謝您撥空留下評論，{brand}非常重視每一位顧客在{mainKeyword}上的體驗與需求。',
+      '感謝您的評論與支持，{brand}始終以專業態度看待每一次{mainKeyword}的服務。',
+    ],
+    body: [
+      '我們始終堅持{advantagesPhrase}，並持續精進{relatedKeywordsPhrase}等專業領域，確保每位顧客都能獲得最合適的服務與照護。',
+      '{brand}團隊擁有{advantagesPhrase}的優勢，也持續在{relatedKeywordsPhrase}等面向投入資源，希望能讓每位顧客安心託付。',
+      '秉持{advantagesPhrase}的核心價值，{brand}也持續關注{relatedKeywordsPhrase}相關發展，力求提供最專業可靠的服務。',
+    ],
+    extension: [
+      '無論是{mainKeyword}前的諮詢，或是後續的追蹤與保養，{brand}都會全程用心陪伴，讓您安心無虞。',
+      '從初次接觸到完成{mainKeyword}，{brand}的每一位夥伴都秉持相同的專業與細心，盡力做到最好。',
+      '我們也持續蒐集顧客的回饋，作為改善{relatedKeywordsPhrase}服務品質的重要依據。',
+    ],
+    closing: [
+      '期待未來持續為您提供優質的{mainKeyword}服務，也誠摯歡迎您再次蒞臨{brand}。',
+      '如果您對{mainKeyword}還有任何需求，歡迎隨時與{brand}聯繫，我們將竭誠為您服務。',
+      '再次感謝您的支持與信任，{brand}會持續努力，期待下次再為您服務。',
+    ],
+  },
+  '親切溫暖': {
+    opening: [
+      '謝謝您留下這麼溫暖的評論！能陪伴您完成{mainKeyword}，{brand}真的很開心。',
+      '看到您的留言，{brand}整個團隊都覺得好窩心，謝謝您給我們機會照顧您的{mainKeyword}。',
+      '謝謝您的分享，能陪您一起走過{mainKeyword}的過程，是{brand}最珍惜的緣分。',
+    ],
+    body: [
+      '我們一直很重視{advantagesPhrase}，也希望透過{relatedKeywordsPhrase}等服務，讓每位來到{brand}的朋友都能感受到用心與溫度。',
+      '{brand}相信{advantagesPhrase}才是最重要的，未來也會持續在{relatedKeywordsPhrase}上多下功夫，陪伴大家一起變得更好。',
+      '從{advantagesPhrase}到{relatedKeywordsPhrase}，{brand}都希望能陪著每一位顧客，一起用心對待每一個小細節。',
+    ],
+    extension: [
+      '每一次與顧客的互動，對{brand}來說都是很珍貴的學習，謝謝您願意信任我們。',
+      '您的鼓勵是{brand}持續前進最大的動力，我們會繼續用心對待每一位朋友。',
+      '能陪伴您走過{mainKeyword}的這段路，是{brand}覺得最有意義的事。',
+    ],
+    closing: [
+      '有您這樣的支持，{brand}會更有動力繼續前進，也期待下次再見到您！',
+      '歡迎您隨時回來找{brand}聊聊{mainKeyword}的大小事，我們都在這裡等您。',
+      '謝謝您，也祝您順心，{brand}隨時歡迎您再次光臨。',
+    ],
+  },
+  '活潑熱情': {
+    opening: [
+      '哇～收到您的評論整個團隊都超開心！謝謝您選擇{brand}來處理{mainKeyword}。',
+      '太感謝了！能被您這樣肯定，{brand}真的是元氣滿滿！',
+      '收到滿滿的好評，{brand}忍不住要跟您說聲謝謝！',
+    ],
+    body: [
+      '我們家最自豪的就是{advantagesPhrase}，而且還在{relatedKeywordsPhrase}上不斷精進，就是希望帶給大家最棒的體驗！',
+      '{brand}的{advantagesPhrase}可不是說假的，加上我們對{relatedKeywordsPhrase}的用心，每一次服務都全力以赴！',
+      '從{advantagesPhrase}到{relatedKeywordsPhrase}，{brand}永遠都在進步的路上，就是要讓大家越來越滿意！',
+    ],
+    extension: [
+      '每次看到大家滿意的笑容，就是{brand}team 最有成就感的時刻！',
+      '{brand}會繼續保持這股熱情，把每一次{mainKeyword}都做到最好！',
+      '有您的鼓勵，{brand}接下來會更有動力衝刺，請大家繼續期待！',
+    ],
+    closing: [
+      '下次再來找我們玩喔！{brand}隨時準備好用最好的狀態迎接您！',
+      '有您這句話，{brand}接下來會更拼！期待很快再見！',
+      '謝謝您替{brand}加油打氣，我們會繼續努力，不見不散！',
+    ],
+  },
+  '簡潔俐落': {
+    opening: [
+      '感謝您的評論，{brand}很高興能協助您完成{mainKeyword}。',
+      '謝謝支持，{brand}持續致力於提供優質的{mainKeyword}服務。',
+      '感謝肯定，這是{brand}持續進步的動力。',
+    ],
+    body: [
+      '{brand}的優勢在於{advantagesPhrase}，並專注於{relatedKeywordsPhrase}等領域，提供穩定可靠的服務品質。',
+      '我們專注{advantagesPhrase}，同時持續優化{relatedKeywordsPhrase}，確保服務效率與品質兼顧。',
+      '憑藉{advantagesPhrase}，{brand}也持續深耕{relatedKeywordsPhrase}，滿足顧客多元需求。',
+    ],
+    extension: [
+      '服務流程與品質標準會持續檢視與調整，確保每位顧客的體驗一致。',
+      '我們重視每一則回饋，並以此作為優化{relatedKeywordsPhrase}服務的依據。',
+      '團隊會持續精進{mainKeyword}相關流程，提升整體服務效率。',
+    ],
+    closing: [
+      '歡迎再次選擇{brand}，我們持續提供高品質服務。',
+      '感謝支持，期待下次為您服務。',
+      '{brand}會持續進步，歡迎再次光臨。',
+    ],
+  },
+};
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function splitList(text) {
+  return text.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
+}
+
+function joinPhrase(list, fallback, max = 3) {
+  const items = list.slice(0, max);
+  return items.length > 0 ? items.join('、') : fallback;
+}
+
+function fillTemplate(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] || '');
+}
+
+function generateReviewReply() {
+  el('rrError').textContent = '';
+  const mainKeyword = el('rrMainKeyword').value.trim();
+  const brand = el('rrBrand').value.trim();
+  if (!mainKeyword || !brand) {
+    el('rrError').textContent = '主關鍵字與品牌名稱為必填';
+    return;
+  }
+  const relatedKeywords = splitList(el('rrRelatedKeywords').value);
+  const advantages = splitList(el('rrAdvantages').value);
+  const style = el('rrStyle').value;
+
+  const vars = {
+    mainKeyword,
+    brand,
+    relatedKeywordsPhrase: joinPhrase(relatedKeywords, '相關服務'),
+    advantagesPhrase: joinPhrase(advantages, '用心服務'),
+  };
+
+  const t = REVIEW_TEMPLATES[style];
+  const parts = [
+    fillTemplate(pickRandom(t.opening), vars),
+    fillTemplate(pickRandom(t.body), vars),
+    fillTemplate(pickRandom(t.extension), vars),
+    fillTemplate(pickRandom(t.closing), vars),
+  ];
+  const text = parts.join('');
+
+  el('rrOutput').textContent = text;
+  el('rrCharCount').textContent = `目前約 ${text.length} 字（模板拼接，字數僅供參考）`;
+}
+
+el('rrGenerateBtn').onclick = generateReviewReply;
+el('rrRerollBtn').onclick = generateReviewReply;
+
+el('rrCopyBtn').onclick = () => {
+  const text = el('rrOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('已複製到剪貼簿'));
+};
 </script>
 </body>
 </html>
