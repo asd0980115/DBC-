@@ -17,119 +17,65 @@
   header h1 { margin: 0; font-size: 20px; }
   header p { margin: 4px 0 0; font-size: 13px; color: #b8bccb; }
   .layout {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    padding: 16px; max-width: 1400px; margin: 0 auto;
+    max-width: 900px; margin: 0 auto; padding: 16px;
   }
-  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
   .card {
     background: #fff; border-radius: 10px; padding: 16px 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px;
   }
   .card h2 { font-size: 16px; margin: 0 0 12px; }
   label { display: block; font-size: 13px; margin: 10px 0 4px; color: #444; }
-  input, select, textarea {
-    width: 100%; padding: 8px 10px; border: 1px solid #d5d8de; border-radius: 6px;
+  input {
+    width: 100%; padding: 9px 10px; border: 1px solid #d5d8de; border-radius: 6px;
     font-size: 14px; font-family: inherit;
   }
-  textarea { min-height: 60px; resize: vertical; }
   button {
-    margin-top: 12px; padding: 9px 16px; border: none; border-radius: 6px;
+    margin-top: 14px; padding: 10px 20px; border: none; border-radius: 6px;
     background: #2f5fed; color: #fff; font-size: 14px; cursor: pointer;
   }
   button.secondary { background: #e5e7eb; color: #1f2430; }
-  button.danger { background: #d92d20; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .fact-row {
-    border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
-    font-size: 13px;
-  }
-  .fact-row .meta { color: #666; margin-top: 4px; }
-  .badge {
-    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px;
-  }
-  .badge.verified { background: #d1fadf; color: #05603a; }
-  .badge.unverified { background: #fef0c7; color: #93370d; }
-  .keyword-pill {
-    display: inline-block; padding: 4px 10px; margin: 2px 4px 2px 0; border-radius: 999px;
-    background: #eef1ff; color: #2f5fed; font-size: 13px; cursor: pointer; border: 1px solid transparent;
-  }
-  .keyword-pill.active { border-color: #2f5fed; font-weight: 600; }
   #output {
     white-space: pre-wrap; background: #0f1115; color: #d9dde5; padding: 16px;
-    border-radius: 8px; font-size: 13px; line-height: 1.7; min-height: 200px;
+    border-radius: 8px; font-size: 13px; line-height: 1.7; min-height: 160px;
   }
   .error { color: #d92d20; font-size: 13px; margin-top: 8px; white-space: pre-wrap; }
-  .hint { font-size: 12px; color: #888; margin-top: 4px; }
-  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-  .row-actions button { margin-top: 0; padding: 4px 10px; font-size: 12px; }
+  .hint { font-size: 12px; color: #888; margin-top: 6px; }
+  #sources { margin-top: 12px; font-size: 13px; }
+  #sources a { color: #2f5fed; word-break: break-all; }
+  #sources li { margin-bottom: 4px; }
 </style>
 </head>
 <body>
 <header>
   <h1>AI 引用內容產生器（GEO Content Generator）</h1>
-  <p>依「awoo GEO 分析洞察」四項規則，用已審核醫學數據 + Claude 產生文章草稿，需經醫療專業人員審閱後發布。</p>
+  <p>輸入關鍵字，Claude 會即時搜尋公開醫學資訊並依「awoo GEO 分析洞察」規則產生 Google 回覆精華段落。</p>
 </header>
 
 <div class="layout">
-  <div>
-    <div class="card">
-      <h2>1. 選擇 / 建立關鍵字</h2>
-      <div id="keywordList"></div>
-      <label>關鍵字（例：痔瘡手術）</label>
-      <input id="newKeyword" placeholder="輸入新關鍵字或既有關鍵字">
-      <label>科別</label>
-      <input id="specialty" placeholder="例：大腸直腸外科">
-      <label>中文術語</label>
-      <input id="chineseTerm" placeholder="例：痔瘡切除術">
-      <label>英文術語</label>
-      <input id="englishTerm" placeholder="例：Hemorrhoidectomy">
-      <label>台灣在地詞（逗號分隔）</label>
-      <input id="taiwanTerms" placeholder="例：在台灣, 健保給付範圍">
-      <label>比較主題（格式：A/B，逗號分隔多組）</label>
-      <input id="comparisonPairs" placeholder="例：傳統痔瘡手術/PPH 環狀痔瘡切除術">
-      <button id="saveKeywordBtn">儲存關鍵字設定</button>
-      <div id="keywordError" class="error"></div>
-    </div>
-
-    <div class="card">
-      <h2>2. 醫學數據（僅「已審核」的數據才能用於生成）</h2>
-      <div id="factList"></div>
-      <label>數據項目</label>
-      <input id="factLabel" placeholder="例：術後併發症發生率">
-      <label>數值內容</label>
-      <input id="factValue" placeholder="例：文獻報告約 1.5%–3.8%">
-      <label>來源名稱</label>
-      <input id="factSource" placeholder="例：衛生福利部 XX 公告 / 台灣大腸直腸外科醫學會">
-      <label>來源連結（選填）</label>
-      <input id="factUrl" placeholder="https://...">
-      <button id="addFactBtn">新增數據（預設未審核）</button>
-      <div class="hint">新增後請由醫師/醫療專業人員確認正確性，再按「標記已審核」。</div>
-      <div id="factError" class="error"></div>
-    </div>
+  <div class="card">
+    <h2>輸入關鍵字</h2>
+    <label>關鍵字（例：痔瘡手術）</label>
+    <input id="keyword" placeholder="輸入關鍵字">
+    <label>科別（選填）</label>
+    <input id="specialty" placeholder="例：大腸直腸外科">
+    <label>審閱醫師（選填）</label>
+    <input id="doctorName" placeholder="例：王大明">
+    <button id="generateBtn">產生內容</button>
+    <div class="hint">Claude 會上網搜尋公開資料以確保數字有依據，過程可能需要幾秒到十幾秒。</div>
+    <div id="generateError" class="error"></div>
   </div>
 
-  <div>
-    <div class="card">
-      <h2>3. 生成文章草稿</h2>
-      <label>醫師姓名（選填）</label>
-      <input id="doctorName" placeholder="例：王大明">
-      <label>最後更新（預設本月）</label>
-      <input id="lastUpdated" placeholder="例：2026年7月">
-      <button id="generateBtn">產生內容</button>
-      <div id="generateError" class="error"></div>
-    </div>
-
-    <div class="card">
-      <h2>產出結果</h2>
-      <div id="output">尚未生成內容。請先於左側選擇關鍵字並確保有已審核數據，再按「產生內容」。</div>
-      <div id="sourcesUsed"></div>
-      <button class="secondary" id="copyBtn">複製內容</button>
-    </div>
+  <div class="card">
+    <h2>產出結果</h2>
+    <div id="output">尚未生成內容。請輸入關鍵字後按「產生內容」。</div>
+    <ul id="sources"></ul>
+    <button class="secondary" id="copyBtn">複製內容</button>
   </div>
 </div>
 
 <script>
-let currentKeyword = null;
+function el(id) { return document.getElementById(id); }
 
 async function api(path, options) {
   const res = await fetch(path, options);
@@ -138,144 +84,27 @@ async function api(path, options) {
   return data;
 }
 
-function el(id) { return document.getElementById(id); }
-
-async function loadKeywords() {
-  const list = await api('/api/keywords');
-  const container = el('keywordList');
-  container.innerHTML = '';
-  if (list.length === 0) {
-    container.innerHTML = '<div class="hint">尚無關鍵字，請於下方建立第一筆。</div>';
-  }
-  list.forEach(k => {
-    const pill = document.createElement('span');
-    pill.className = 'keyword-pill' + (k.keyword === currentKeyword ? ' active' : '');
-    pill.textContent = `${k.keyword}（${k.verified_fact_count}/${k.fact_count} 已審核）`;
-    pill.onclick = () => selectKeyword(k.keyword);
-    container.appendChild(pill);
-  });
-}
-
-async function selectKeyword(keyword) {
-  currentKeyword = keyword;
-  el('newKeyword').value = keyword;
-  try {
-    const entry = await api('/api/kb/' + encodeURIComponent(keyword));
-    el('specialty').value = entry.specialty || '';
-    el('chineseTerm').value = entry.chinese_term || '';
-    el('englishTerm').value = entry.english_term || '';
-    el('taiwanTerms').value = (entry.taiwan_local_terms || []).join(', ');
-    el('comparisonPairs').value = (entry.comparison_pairs || []).map(p => p.join('/')).join(', ');
-    renderFacts(entry.facts || []);
-  } catch (e) {
-    renderFacts([]);
-  }
-  loadKeywords();
-}
-
-function renderFacts(facts) {
-  const container = el('factList');
-  container.innerHTML = '';
-  if (facts.length === 0) {
-    container.innerHTML = '<div class="hint">尚無數據，請於下方新增。</div>';
-    return;
-  }
-  facts.forEach(f => {
-    const row = document.createElement('div');
-    row.className = 'fact-row';
-    row.innerHTML = `
-      <div><strong>${f.label}</strong> <span class="badge ${f.verified ? 'verified' : 'unverified'}">${f.verified ? '已審核' : '未審核'}</span></div>
-      <div class="meta">${f.value}</div>
-      <div class="meta">來源：${f.source_name}${f.source_url ? ' (' + f.source_url + ')' : ''}</div>
-      <div class="row-actions">
-        <button data-action="verify" data-id="${f.id}">${f.verified ? '取消審核' : '標記已審核'}</button>
-        <button data-action="delete" data-id="${f.id}" class="danger">刪除</button>
-      </div>
-    `;
-    container.appendChild(row);
-  });
-  container.querySelectorAll('button[data-action="verify"]').forEach(btn => {
-    btn.onclick = async () => {
-      const fact = facts.find(f => f.id === btn.dataset.id);
-      await api(`/api/kb/${encodeURIComponent(currentKeyword)}/facts/${btn.dataset.id}/verify`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ verified: !fact.verified })
-      });
-      selectKeyword(currentKeyword);
-    };
-  });
-  container.querySelectorAll('button[data-action="delete"]').forEach(btn => {
-    btn.onclick = async () => {
-      if (!confirm('確定刪除此數據？')) return;
-      await api(`/api/kb/${encodeURIComponent(currentKeyword)}/facts/${btn.dataset.id}`, { method: 'DELETE' });
-      selectKeyword(currentKeyword);
-    };
-  });
-}
-
-el('saveKeywordBtn').onclick = async () => {
-  el('keywordError').textContent = '';
-  const keyword = el('newKeyword').value.trim();
-  if (!keyword) { el('keywordError').textContent = '請輸入關鍵字'; return; }
-  const comparisonPairs = el('comparisonPairs').value
-    .split(',').map(s => s.trim()).filter(Boolean)
-    .map(pair => pair.split('/').map(s => s.trim())).filter(p => p.length === 2);
-  try {
-    await api('/api/kb', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        keyword,
-        specialty: el('specialty').value.trim(),
-        chinese_term: el('chineseTerm').value.trim(),
-        english_term: el('englishTerm').value.trim(),
-        taiwan_local_terms: el('taiwanTerms').value.split(',').map(s => s.trim()).filter(Boolean),
-        comparison_pairs: comparisonPairs,
-      })
-    });
-    selectKeyword(keyword);
-  } catch (e) {
-    el('keywordError').textContent = e.message;
-  }
-};
-
-el('addFactBtn').onclick = async () => {
-  el('factError').textContent = '';
-  if (!currentKeyword) { el('factError').textContent = '請先選擇或建立關鍵字'; return; }
-  try {
-    await api(`/api/kb/${encodeURIComponent(currentKeyword)}/facts`, {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        label: el('factLabel').value.trim(),
-        value: el('factValue').value.trim(),
-        source_name: el('factSource').value.trim(),
-        source_url: el('factUrl').value.trim(),
-      })
-    });
-    el('factLabel').value = ''; el('factValue').value = '';
-    el('factSource').value = ''; el('factUrl').value = '';
-    selectKeyword(currentKeyword);
-  } catch (e) {
-    el('factError').textContent = e.message;
-  }
-};
-
 el('generateBtn').onclick = async () => {
   el('generateError').textContent = '';
-  if (!currentKeyword) { el('generateError').textContent = '請先選擇關鍵字'; return; }
-  el('output').textContent = '生成中，請稍候...';
+  const keyword = el('keyword').value.trim();
+  if (!keyword) { el('generateError').textContent = '請輸入關鍵字'; return; }
+
+  el('output').textContent = '生成中，請稍候...（Claude 正在搜尋公開資料）';
+  el('sources').innerHTML = '';
   el('generateBtn').disabled = true;
   try {
     const result = await api('/api/generate', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        keyword: currentKeyword,
+        keyword,
+        specialty: el('specialty').value.trim(),
         doctor_name: el('doctorName').value.trim(),
-        last_updated: el('lastUpdated').value.trim(),
       })
     });
     el('output').textContent = result.content;
-    el('sourcesUsed').innerHTML = '<div class="hint">使用來源：' +
-      result.sources_used.map(s => s.source_name).join('、') + '</div>';
+    el('sources').innerHTML = result.sources.map(s =>
+      `<li><a href="${s.url}" target="_blank" rel="noopener">${s.title}</a></li>`
+    ).join('');
   } catch (e) {
     el('output').textContent = '';
     el('generateError').textContent = e.message;
@@ -288,8 +117,6 @@ el('copyBtn').onclick = () => {
   const text = el('output').textContent;
   navigator.clipboard.writeText(text).then(() => alert('已複製到剪貼簿'));
 };
-
-loadKeywords();
 </script>
 </body>
 </html>
