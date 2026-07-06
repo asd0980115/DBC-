@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 引用內容產生器</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+    margin: 0; background: #f4f5f7; color: #1f2430;
+  }
+  header {
+    background: #1f2430; color: #fff; padding: 16px 24px;
+  }
+  header h1 { margin: 0; font-size: 20px; }
+  header p { margin: 4px 0 0; font-size: 13px; color: #b8bccb; }
+  .layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    padding: 16px; max-width: 1400px; margin: 0 auto;
+  }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+  .card {
+    background: #fff; border-radius: 10px; padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px; }
+  label { display: block; font-size: 13px; margin: 10px 0 4px; color: #444; }
+  input, select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #d5d8de; border-radius: 6px;
+    font-size: 14px; font-family: inherit;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  button {
+    margin-top: 12px; padding: 9px 16px; border: none; border-radius: 6px;
+    background: #2f5fed; color: #fff; font-size: 14px; cursor: pointer;
+  }
+  button.secondary { background: #e5e7eb; color: #1f2430; }
+  button.danger { background: #d92d20; }
+  .section-row {
+    border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .section-row .meta { color: #666; margin-top: 4px; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px;
+  }
+  .badge.verified { background: #d1fadf; color: #05603a; }
+  .badge.unverified { background: #fef0c7; color: #93370d; }
+  .keyword-pill {
+    display: inline-block; padding: 4px 10px; margin: 2px 4px 2px 0; border-radius: 999px;
+    background: #eef1ff; color: #2f5fed; font-size: 13px; cursor: pointer; border: 1px solid transparent;
+  }
+  .keyword-pill.active { border-color: #2f5fed; font-weight: 600; }
+  #output {
+    white-space: pre-wrap; background: #0f1115; color: #d9dde5; padding: 16px;
+    border-radius: 8px; font-size: 13px; line-height: 1.7; min-height: 200px;
+  }
+  .error { color: #d92d20; font-size: 13px; margin-top: 8px; white-space: pre-wrap; }
+  .warning { color: #93370d; font-size: 13px; margin-top: 8px; white-space: pre-wrap; }
+  .hint { font-size: 12px; color: #888; margin-top: 4px; }
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .row-actions button { margin-top: 0; padding: 4px 10px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AI 引用內容產生器（GEO Content Generator）</h1>
+  <p>純靜態版本，不呼叫任何外部 API。依「awoo GEO 分析洞察」規則，把你填寫的數據組裝成方便 AI 引擎引用的內容。所有資料只存在這台瀏覽器（localStorage）。</p>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>1. 選擇 / 建立關鍵字</h2>
+      <div id="keywordList"></div>
+      <label>關鍵字（例：痔瘡手術）</label>
+      <input id="newKeyword" placeholder="輸入新關鍵字或既有關鍵字">
+      <label>科別</label>
+      <input id="specialty" placeholder="例：大腸直腸外科">
+      <label>中文術語</label>
+      <input id="chineseTerm" placeholder="例：痔瘡切除術">
+      <label>英文術語</label>
+      <input id="englishTerm" placeholder="例：Hemorrhoidectomy">
+      <label>開頭摘要（建議恰好三句話，定義這個主題）</label>
+      <textarea id="definition" placeholder="例：痔瘡切除術（Hemorrhoidectomy）是治療重度痔瘡的手術方式。手術目的是切除病灶並改善出血、脫垂等症狀。適應症與術式選擇需由大腸直腸外科醫師評估。"></textarea>
+      <button id="saveKeywordBtn">儲存關鍵字設定</button>
+      <div id="keywordError" class="error"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. 內容段落（H2 問句 + 數據 + 結論 + 來源）</h2>
+      <div id="sectionList"></div>
+      <label>H2 標題（必須是問句；建議至少一段含「在台灣/健保給付」等在地詞，至少一段是比較型問句）</label>
+      <input id="sectionQuestion" placeholder="例：在台灣，痔瘡手術後大約需要恢復多久？">
+      <label>數據 / 內容</label>
+      <input id="sectionValue" placeholder="例：多數患者恢復期約 2–4 週">
+      <label>結論句</label>
+      <input id="sectionConclusion" placeholder="例：術後充分休息與傷口照護是加速恢復的關鍵">
+      <label>來源名稱</label>
+      <input id="sectionSource" placeholder="例：台灣大腸直腸外科醫學會衛教資訊">
+      <label>來源連結（選填）</label>
+      <input id="sectionSourceUrl" placeholder="https://...">
+      <button id="addSectionBtn">新增段落（預設未審核）</button>
+      <div class="hint">新增後請由醫療專業人員確認正確性，再按「標記已審核」——只有已審核的段落才會出現在產出內容中。</div>
+      <div id="sectionError" class="error"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>3. 產生內容</h2>
+      <label>醫師姓名（選填）</label>
+      <input id="doctorName" placeholder="例：王大明">
+      <label>最後更新（預設本月）</label>
+      <input id="lastUpdated" placeholder="例：2026年7月">
+      <button id="generateBtn">產生內容</button>
+      <div id="generateWarning" class="warning"></div>
+      <div id="generateError" class="error"></div>
+    </div>
+
+    <div class="card">
+      <h2>產出結果</h2>
+      <div id="output">尚未生成內容。請先於左側選擇關鍵字並確保有已審核段落，再按「產生內容」。</div>
+      <button class="secondary" id="copyBtn">複製內容</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'geoContentGeneratorKB_v1';
+
+const DEFAULT_KB = {
+  '痔瘡手術': {
+    specialty: '大腸直腸外科',
+    chineseTerm: '痔瘡切除術',
+    englishTerm: 'Hemorrhoidectomy',
+    definition: '（範例資料，請替換為實際審核過的內容）痔瘡切除術（Hemorrhoidectomy）是治療重度痔瘡的手術方式之一。手術目的是切除病灶組織並改善出血、脫垂等症狀。實際適應症與術式選擇需由大腸直腸外科醫師評估後決定。',
+    sections: [
+      {
+        id: 'sec-1',
+        question: '在台灣，痔瘡手術後大約需要恢復多久？',
+        value: '（範例，需替換為實際數據）多數患者恢復期約 2–4 週',
+        conclusion: '術後充分休息與傷口照護是加速恢復的關鍵',
+        sourceName: '【待審核】請填入實際文獻或醫學會建議來源',
+        sourceUrl: '',
+        verified: false,
+      },
+      {
+        id: 'sec-2',
+        question: '傳統痔瘡手術和 PPH 環狀痔瘡切除術有什麼差別？',
+        value: '（範例，需替換為實際數據）兩者在術後疼痛與恢復期上有所差異',
+        conclusion: '實際術式選擇需與醫師討論個人狀況後決定',
+        sourceName: '【待審核】請填入實際文獻或醫學會建議來源',
+        sourceUrl: '',
+        verified: false,
+      },
+    ],
+  },
+};
+
+let currentKeyword = null;
+
+function el(id) { return document.getElementById(id); }
+
+function loadKB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* fall through to default */ }
+  saveKB(DEFAULT_KB);
+  return JSON.parse(JSON.stringify(DEFAULT_KB));
+}
+
+function saveKB(kb) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(kb));
+}
+
+function renderKeywordList() {
+  const kb = loadKB();
+  const container = el('keywordList');
+  container.innerHTML = '';
+  const keywords = Object.keys(kb);
+  if (keywords.length === 0) {
+    container.innerHTML = '<div class="hint">尚無關鍵字，請於下方建立第一筆。</div>';
+  }
+  keywords.forEach(keyword => {
+    const entry = kb[keyword];
+    const verifiedCount = (entry.sections || []).filter(s => s.verified).length;
+    const pill = document.createElement('span');
+    pill.className = 'keyword-pill' + (keyword === currentKeyword ? ' active' : '');
+    pill.textContent = `${keyword}（${verifiedCount}/${(entry.sections || []).length} 已審核）`;
+    pill.onclick = () => selectKeyword(keyword);
+    container.appendChild(pill);
+  });
+}
+
+function selectKeyword(keyword) {
+  currentKeyword = keyword;
+  const kb = loadKB();
+  const entry = kb[keyword] || { specialty: '', chineseTerm: '', englishTerm: '', definition: '', sections: [] };
+  el('newKeyword').value = keyword;
+  el('specialty').value = entry.specialty || '';
+  el('chineseTerm').value = entry.chineseTerm || '';
+  el('englishTerm').value = entry.englishTerm || '';
+  el('definition').value = entry.definition || '';
+  renderSectionList(entry.sections || []);
+  renderKeywordList();
+}
+
+function renderSectionList(sections) {
+  const container = el('sectionList');
+  container.innerHTML = '';
+  if (sections.length === 0) {
+    container.innerHTML = '<div class="hint">尚無段落，請於下方新增。</div>';
+    return;
+  }
+  sections.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'section-row';
+    row.innerHTML = `
+      <div><strong>${s.question}</strong> <span class="badge ${s.verified ? 'verified' : 'unverified'}">${s.verified ? '已審核' : '未審核'}</span></div>
+      <div class="meta">${s.value}${s.conclusion ? '。' + s.conclusion : ''}</div>
+      <div class="meta">來源：${s.sourceName}${s.sourceUrl ? ' (' + s.sourceUrl + ')' : ''}</div>
+      <div class="row-actions">
+        <button data-action="verify" data-id="${s.id}">${s.verified ? '取消審核' : '標記已審核'}</button>
+        <button data-action="delete" data-id="${s.id}" class="danger">刪除</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  container.querySelectorAll('button[data-action="verify"]').forEach(btn => {
+    btn.onclick = () => {
+      const kb = loadKB();
+      const entry = kb[currentKeyword];
+      const section = entry.sections.find(s => s.id === btn.dataset.id);
+      section.verified = !section.verified;
+      saveKB(kb);
+      selectKeyword(currentKeyword);
+    };
+  });
+  container.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+    btn.onclick = () => {
+      if (!confirm('確定刪除此段落？')) return;
+      const kb = loadKB();
+      const entry = kb[currentKeyword];
+      entry.sections = entry.sections.filter(s => s.id !== btn.dataset.id);
+      saveKB(kb);
+      selectKeyword(currentKeyword);
+    };
+  });
+}
+
+el('saveKeywordBtn').onclick = () => {
+  el('keywordError').textContent = '';
+  const keyword = el('newKeyword').value.trim();
+  if (!keyword) { el('keywordError').textContent = '請輸入關鍵字'; return; }
+  const kb = loadKB();
+  const entry = kb[keyword] || { sections: [] };
+  entry.specialty = el('specialty').value.trim();
+  entry.chineseTerm = el('chineseTerm').value.trim();
+  entry.englishTerm = el('englishTerm').value.trim();
+  entry.definition = el('definition').value.trim();
+  entry.sections = entry.sections || [];
+  kb[keyword] = entry;
+  saveKB(kb);
+  selectKeyword(keyword);
+};
+
+el('addSectionBtn').onclick = () => {
+  el('sectionError').textContent = '';
+  if (!currentKeyword) { el('sectionError').textContent = '請先選擇或建立關鍵字'; return; }
+  const question = el('sectionQuestion').value.trim();
+  const value = el('sectionValue').value.trim();
+  const sourceName = el('sectionSource').value.trim();
+  if (!question || !value || !sourceName) {
+    el('sectionError').textContent = 'H2 標題、數據內容、來源名稱為必填';
+    return;
+  }
+  const kb = loadKB();
+  const entry = kb[currentKeyword];
+  entry.sections = entry.sections || [];
+  entry.sections.push({
+    id: 'sec-' + Date.now(),
+    question: question.endsWith('？') || question.endsWith('?') ? question : question + '？',
+    value,
+    conclusion: el('sectionConclusion').value.trim(),
+    sourceName,
+    sourceUrl: el('sectionSourceUrl').value.trim(),
+    verified: false,
+  });
+  saveKB(kb);
+  el('sectionQuestion').value = '';
+  el('sectionValue').value = '';
+  el('sectionConclusion').value = '';
+  el('sectionSource').value = '';
+  el('sectionSourceUrl').value = '';
+  selectKeyword(currentKeyword);
+};
+
+const TAIWAN_LOCAL_HINTS = ['台灣', '健保', '給付'];
+const COMPARISON_HINTS = ['差別', '差異', ' vs ', 'VS', '比較'];
+
+el('generateBtn').onclick = () => {
+  el('generateError').textContent = '';
+  el('generateWarning').textContent = '';
+  if (!currentKeyword) { el('generateError').textContent = '請先選擇關鍵字'; return; }
+
+  const kb = loadKB();
+  const entry = kb[currentKeyword];
+  const verifiedSections = (entry.sections || []).filter(s => s.verified);
+
+  if (verifiedSections.length === 0) {
+    el('generateError').textContent = '此關鍵字尚無「已審核」的段落，請先在左側新增段落並標記為已審核後再產生。';
+    el('output').textContent = '';
+    return;
+  }
+
+  const warnings = [];
+  if (!verifiedSections.some(s => TAIWAN_LOCAL_HINTS.some(t => s.question.includes(t)))) {
+    warnings.push('提醒：目前已審核的段落中，沒有任何標題包含台灣在地詞（如「在台灣」「健保給付」），建議補上一段。');
+  }
+  if (!verifiedSections.some(s => COMPARISON_HINTS.some(t => s.question.includes(t)))) {
+    warnings.push('提醒：目前已審核的段落中，沒有比較型問句（如「A 和 B 有什麼差別？」），建議補上一段。');
+  }
+  el('generateWarning').textContent = warnings.join('\n');
+
+  const doctorName = el('doctorName').value.trim();
+  const lastUpdated = el('lastUpdated').value.trim() || (new Date().getFullYear() + '年' + (new Date().getMonth() + 1) + '月');
+
+  const lines = [];
+  lines.push(`最後更新：${lastUpdated}`);
+  if (doctorName) {
+    lines.push(`${doctorName}（${entry.specialty || ''}專科）審閱`);
+  }
+  lines.push('');
+  if (entry.chineseTerm && entry.englishTerm) {
+    lines.push(`${entry.chineseTerm}（${entry.englishTerm}）`);
+  }
+  lines.push(entry.definition || '');
+  lines.push('');
+  verifiedSections.forEach(s => {
+    lines.push(`## ${s.question}`);
+    let paragraph = s.value;
+    if (s.conclusion) paragraph += `。${s.conclusion}`;
+    paragraph += `。根據${s.sourceName}${s.sourceUrl ? '（' + s.sourceUrl + '）' : ''}資料。`;
+    lines.push(paragraph);
+    lines.push('');
+  });
+  lines.push('⚠️ 本內容由院內人員撰寫並標記已審核，發布前仍建議由醫療專業人員再次確認正確性。');
+
+  el('output').textContent = lines.join('\n').replace(/\n{3,}/g, '\n\n');
+};
+
+el('copyBtn').onclick = () => {
+  const text = el('output').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('已複製到剪貼簿'));
+};
+
+renderKeywordList();
+</script>
+</body>
+</html>
