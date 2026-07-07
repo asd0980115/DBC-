@@ -183,11 +183,11 @@ const REVIEW_TEMPLATES = {
     ],
     middleDoctor: [
       '特別要幫{doctorName}醫師大聲喊話，謝謝您這麼用心地照顧大家！',
-      '{doctorName}醫師超級厲害，能被您稱讚真的讓{brand}team 超開心！',
+      '{doctorName}醫師超級厲害，能被您稱讚真的讓{brand}超開心！',
       '有{doctorName}醫師在，{brand}對每一次{mainKeyword}都超有信心！',
     ],
     middleReassurance: [
-      '每次看到大家滿意的笑容，就是{brand}team 最有成就感的時刻！',
+      '每次看到大家滿意的笑容，就是{brand}最有成就感的時刻！',
       '有您的鼓勵，{brand}接下來會更有動力衝刺！',
       '{brand}會繼續保持這股熱情，把每一次服務都做到最好！',
     ],
@@ -294,15 +294,6 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function splitList(text) {
   return text.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
 }
@@ -338,35 +329,43 @@ function generateReviewReply() {
     relatedKeywordsPhrase: joinPhrase(relatedKeywords, '相關服務'),
     advantagesPhrase: joinPhrase(advantages, '用心服務'),
   };
+  // Middle sentences say "我們" instead of repeating the brand name every
+  // time — brand is only spelled out in the opening and closing lines.
+  const pronounVars = { ...vars, brand: '我們' };
 
   const t = REVIEW_TEMPLATES[style];
 
-  const middles = [
-    fillTemplate(pickRandom(t.middleAdvantage), vars),
-    fillTemplate(pickRandom(t.middleRelated), vars),
-  ];
-  if (doctorName) {
-    middles.push(fillTemplate(pickRandom(t.middleDoctor), vars));
-  }
+  // Fixed narrative order (no shuffling): greet -> respond directly to what
+  // the customer wrote (if anything was pasted) -> highlight strengths ->
+  // mention the doctor -> close. Keeping this order stops sentences from
+  // landing in a random, disconnected sequence.
+  const middles = [];
 
   if (feedback) {
     const isNegative = isNegativeFeedback(feedback);
     const quote = extractQuote(feedback);
     if (isNegative) {
       el('rrWarning').textContent = '偵測到這則評論可能包含負面內容，本工具只做關鍵字比對，建議由專人親自回覆，不要直接套用以下內容。';
-      middles.push(fillTemplate(pickRandom(NEGATIVE_FEEDBACK_QUOTE_TEMPLATES), { ...vars, quote }));
+      middles.push(fillTemplate(pickRandom(NEGATIVE_FEEDBACK_QUOTE_TEMPLATES), { ...pronounVars, quote }));
     } else {
-      middles.push(fillTemplate(pickRandom(FEEDBACK_QUOTE_TEMPLATES), { ...vars, quote }));
+      middles.push(fillTemplate(pickRandom(FEEDBACK_QUOTE_TEMPLATES), { ...pronounVars, quote }));
       const topics = detectTopics(feedback).slice(0, 1);
-      topics.forEach(topic => middles.push(fillTemplate(pickRandom(FEEDBACK_TOPIC_TEMPLATES[topic]), vars)));
+      topics.forEach(topic => middles.push(fillTemplate(pickRandom(FEEDBACK_TOPIC_TEMPLATES[topic]), pronounVars)));
     }
-  } else if (Math.random() < 0.6) {
-    middles.push(fillTemplate(pickRandom(t.middleReassurance), vars));
+  }
+
+  middles.push(fillTemplate(pickRandom(t.middleAdvantage), pronounVars));
+  middles.push(fillTemplate(pickRandom(t.middleRelated), pronounVars));
+  if (doctorName) {
+    middles.push(fillTemplate(pickRandom(t.middleDoctor), pronounVars));
+  }
+  if (!feedback && Math.random() < 0.6) {
+    middles.push(fillTemplate(pickRandom(t.middleReassurance), pronounVars));
   }
 
   const parts = [
     fillTemplate(pickRandom(t.opening), vars),
-    ...shuffle(middles),
+    ...middles,
     fillTemplate(pickRandom(t.closing), vars),
   ];
   const text = parts.join('');
