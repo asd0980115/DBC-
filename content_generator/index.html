@@ -301,6 +301,17 @@ const DATA_TEMPLATES = [
   '這些年來我們累積了{serviceDataPhrase}，也始終相信細心與專業才能帶來真正的安心。',
 ];
 
+// For advantage entries that are actually treatment specifics with a number
+// (e.g. "手術10分鐘", "恢復期3天") rather than a quality/value statement —
+// "我們始終堅持手術10分鐘" reads as nonsense. "例如/像是/包括" is a forgiving
+// connector that works with a raw fragment without needing it to be a full
+// clause.
+const PROCEDURE_DETAIL_TEMPLATES = [
+  '針對{mainKeyword}，我們會清楚說明相關細節（例如{detailPhrase}），讓您能安心了解整個療程。',
+  '我們也很重視治療細節，像是{detailPhrase}，都會在術前與您充分溝通。',
+  '{mainKeyword}的相關資訊，包括{detailPhrase}，我們都會盡量讓您清楚掌握。',
+];
+
 const NEGATIVE_FEEDBACK_KEYWORDS = [
   '退費', '太貴', '不推薦', '失望', '很差', '態度不好',
   '等太久', '無效', '負評', '不滿', '投訴', '客訴', '爛',
@@ -400,6 +411,11 @@ function generateReviewReply() {
   const doctorName = el('rrDoctorName').value.trim();
   const relatedKeywords = splitList(el('rrRelatedKeywords').value);
   const advantages = splitList(el('rrAdvantages').value);
+  // Entries with a number ("手術10分鐘", "恢復期3天") are treatment specifics,
+  // not a quality/value claim — "我們始終堅持手術10分鐘" reads as nonsense.
+  // Route those to a separate detail-framing sentence instead.
+  const qualitativeAdvantages = advantages.filter(a => !/\d/.test(a));
+  const quantitativeDetails = advantages.filter(a => /\d/.test(a));
   const serviceData = splitList(el('rrServiceData').value);
   const feedback = el('rrFeedback').value.trim();
   const style = el('rrStyle').value;
@@ -409,7 +425,7 @@ function generateReviewReply() {
     brand,
     doctorName,
     relatedKeywordsPhrase: joinPhrase(relatedKeywords, '相關服務'),
-    advantagesPhrase: joinPhrase(advantages, '用心服務'),
+    advantagesPhrase: joinPhrase(qualitativeAdvantages, '用心服務'),
   };
   // Middle sentences say "我們" instead of repeating the brand name every
   // time — brand is only spelled out in the opening and closing lines.
@@ -439,6 +455,10 @@ function generateReviewReply() {
   }
 
   middles.push(fillTemplate(pickRandom(t.middleAdvantage), pronounVars));
+  if (quantitativeDetails.length > 0) {
+    const detailPhrase = joinPhrase(quantitativeDetails, '', 3);
+    middles.push(fillTemplate(pickRandom(PROCEDURE_DETAIL_TEMPLATES), { ...pronounVars, detailPhrase }));
+  }
   if (serviceData.length > 0) {
     const serviceDataPhrase = joinPhrase(serviceData, '', 3);
     middles.push(fillTemplate(pickRandom(DATA_TEMPLATES), { ...pronounVars, serviceDataPhrase }));
