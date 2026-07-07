@@ -46,44 +46,50 @@
   .hint { font-size: 12px; color: #888; margin-top: 4px; }
   .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .char-count { font-size: 12px; color: #888; margin-top: 6px; }
+  details { margin-top: 14px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; color: #2f5fed; font-weight: 600; }
+  details label:first-of-type { margin-top: 10px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Google 商家評論回覆產生器</h1>
-  <p>純靜態版本，不呼叫任何外部 API、不需要金鑰。可貼上客戶評論內容，自動偵測重點並引用回應，產生約 200 字、適合回覆 Google 商家評論、也容易被 AI 引擎摘錄引用的內容。</p>
+  <p>純靜態版本，不呼叫任何外部 API、不需要金鑰。只要給主關鍵字與客戶評論，就能自動偵測評論重點並引用回應，產生 300 字以內、適合回覆 Google 商家評論、也容易被 AI 引擎摘錄引用的內容。</p>
 </header>
 
 <div class="layout">
   <div>
     <div class="card">
       <h2>輸入資料</h2>
-      <label>品牌名稱</label>
-      <input id="rrBrand" placeholder="例：安心牙醫診所">
-      <label>醫師名稱（選填）</label>
-      <input id="rrDoctorName" placeholder="例：王小明">
       <label>主關鍵字</label>
       <input id="rrMainKeyword" placeholder="例：植牙手術">
-      <label>相關關鍵字（逗號分隔，選填）</label>
-      <input id="rrRelatedKeywords" placeholder="例：牙周治療, 全瓷冠, 數位掃描">
-      <label>文風</label>
-      <select id="rrStyle">
-        <option value="專業信賴">專業信賴</option>
-        <option value="親切溫暖">親切溫暖</option>
-        <option value="活潑熱情">活潑熱情</option>
-        <option value="簡潔俐落">簡潔俐落</option>
-      </select>
-      <label>特色優勢（逗號分隔）</label>
-      <input id="rrAdvantages" placeholder="例：專業技術, 貼心服務, 舒適環境">
-      <label>服務數據（逗號分隔，選填，例如年資、案例數、滿意度）</label>
-      <input id="rrServiceData" placeholder="例：10年經驗, 500+案例, 98%滿意度">
-      <label>客戶評論內容（選填，貼上想回覆的評論）</label>
+      <label>客戶評論內容（貼上想回覆的評論）</label>
       <textarea id="rrFeedback" placeholder="例：醫師人很親切，環境也很乾淨，等待時間比想像中短，效果我很滿意！"></textarea>
       <div class="row-actions">
         <button id="rrGenerateBtn">產生內容</button>
         <button class="secondary" id="rrRerollBtn">換一批</button>
       </div>
       <div id="rrError" class="error"></div>
+      <details>
+        <summary>進階設定（選填，不填也能生成）</summary>
+        <label>品牌名稱</label>
+        <input id="rrBrand" placeholder="例：安心牙醫診所（留空則用「我們」代稱）">
+        <label>醫師名稱</label>
+        <input id="rrDoctorName" placeholder="例：王小明">
+        <label>相關關鍵字（逗號分隔）</label>
+        <input id="rrRelatedKeywords" placeholder="例：牙周治療, 全瓷冠, 數位掃描">
+        <label>文風</label>
+        <select id="rrStyle">
+          <option value="專業信賴">專業信賴</option>
+          <option value="親切溫暖">親切溫暖</option>
+          <option value="活潑熱情">活潑熱情</option>
+          <option value="簡潔俐落">簡潔俐落</option>
+        </select>
+        <label>特色優勢（逗號分隔）</label>
+        <input id="rrAdvantages" placeholder="例：專業技術, 貼心服務, 舒適環境">
+        <label>服務數據（逗號分隔，例如年資、案例數、滿意度）</label>
+        <input id="rrServiceData" placeholder="例：10年經驗, 500+案例, 98%滿意度">
+      </details>
       <div id="rrWarning" class="warning"></div>
       <div class="hint">內容為模板拼接產生，屬於通用草稿，發布前建議依實際情況微調用詞。貼上評論內容只會做關鍵字比對與引用，不會真正理解語意。</div>
     </div>
@@ -91,7 +97,7 @@
 
   <div>
     <div class="card">
-      <h2>產出結果（約 200 字）</h2>
+      <h2>產出結果（300 字以內）</h2>
       <div id="rrOutput">尚未生成內容。請填寫左側資料後按「產生內容」。</div>
       <div id="rrCharCount" class="char-count"></div>
       <button class="secondary" id="rrCopyBtn">複製內容</button>
@@ -312,6 +318,7 @@ function maybeEmoji(style) {
 }
 
 const MAX_QUOTE_LENGTH = 40;
+const MAX_TOTAL_LENGTH = 300;
 
 function hasTopicKeyword(segment) {
   return Object.values(FEEDBACK_TOPIC_KEYWORDS).some(list => list.some(k => segment.includes(k)));
@@ -370,11 +377,13 @@ function generateReviewReply() {
   el('rrError').textContent = '';
   el('rrWarning').textContent = '';
   const mainKeyword = el('rrMainKeyword').value.trim();
-  const brand = el('rrBrand').value.trim();
-  if (!mainKeyword || !brand) {
-    el('rrError').textContent = '主關鍵字與品牌名稱為必填';
+  if (!mainKeyword) {
+    el('rrError').textContent = '主關鍵字為必填';
     return;
   }
+  // Brand name is optional — falls back to "我們" so a reply can be
+  // generated from just a keyword and a patient review.
+  const brand = el('rrBrand').value.trim() || '我們';
   const doctorName = el('rrDoctorName').value.trim();
   const relatedKeywords = splitList(el('rrRelatedKeywords').value);
   const advantages = splitList(el('rrAdvantages').value);
@@ -441,15 +450,21 @@ function generateReviewReply() {
   const emoji2 = maybeEmoji(style);
   if (emoji2) closingText += emoji2;
 
-  const parts = [
-    fillTemplate(pickRandom(t.opening), vars),
-    ...middles,
-    closingText,
-  ];
-  const text = parts.join('');
+  const openingText = fillTemplate(pickRandom(t.opening), vars);
+
+  // middles is built in priority order (respond to the patient's review
+  // first, filler/encouragement sentences last) — if the total runs past
+  // the 300-character target, drop from the end so the reply still fits
+  // without losing the direct response to what the patient wrote.
+  while (middles.length > 0 &&
+         (openingText + middles.join('') + closingText).length > MAX_TOTAL_LENGTH) {
+    middles.pop();
+  }
+
+  const text = [openingText, ...middles, closingText].join('');
 
   el('rrOutput').textContent = text;
-  el('rrCharCount').textContent = `目前約 ${text.length} 字（模板隨機拼接，字數僅供參考）`;
+  el('rrCharCount').textContent = `目前約 ${text.length} 字（300 字以內，模板隨機拼接，字數僅供參考）`;
 }
 
 el('rrGenerateBtn').onclick = generateReviewReply;
