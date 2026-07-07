@@ -118,9 +118,9 @@ const REVIEW_TEMPLATES = {
       '{relatedKeywordsPhrase}等相關服務，也是我們持續精進的重點項目。',
     ],
     middleDoctor: [
-      '特別感謝{doctorName}醫師在{mainKeyword}過程中的專業與細心。',
-      '{doctorName}醫師與整個團隊都秉持相同的專業態度，為每位顧客把關。',
-      '能由{doctorName}醫師為您提供{mainKeyword}服務，也是{brand}的榮幸。',
+      '{doctorName}醫師在每一次{mainKeyword}的過程中，都會仔細評估、詳細說明，就是希望能兼顧效果與您的安心感。',
+      '從術前溝通到術後追蹤，{doctorName}醫師都秉持一貫的專業與細心，陪您把每個環節都顧好。',
+      '能有{doctorName}醫師這樣值得信賴的夥伴，也是我們一直很珍惜的緣分。',
     ],
     middleReassurance: [
       '從初次諮詢到完成{mainKeyword}，我們都會全程用心陪伴，讓您安心無虞。',
@@ -131,6 +131,7 @@ const REVIEW_TEMPLATES = {
       '期待未來持續為您提供優質的{mainKeyword}服務，也誠摯歡迎您再次蒞臨{brand}。',
       '如果您對{mainKeyword}還有任何需求，歡迎隨時與{brand}聯繫，我們將竭誠為您服務。',
       '再次感謝您的支持與信任，{brand}會持續努力，期待下次再為您服務。',
+      '祝您{mainKeyword}後續恢復順利，也提醒記得依照建議回診追蹤，我們下次見！',
     ],
   },
   '親切溫暖': {
@@ -150,9 +151,9 @@ const REVIEW_TEMPLATES = {
       '{relatedKeywordsPhrase}這些部分，我們也會持續用心經營。',
     ],
     middleDoctor: [
-      '謝謝{doctorName}醫師這麼細心地照顧您的{mainKeyword}，我們都看在眼裡。',
-      '{doctorName}醫師總是很有耐心地陪伴每一位顧客，這是{brand}最引以為傲的地方。',
-      '能有{doctorName}醫師這樣用心的夥伴，是{brand}最幸運的事。',
+      '{doctorName}醫師總是很有耐心地一步步說明{mainKeyword}的細節，就是希望您能安心、沒有壓力。',
+      '看到{doctorName}醫師這麼細心地照顧您，我們都覺得很暖心，這也是我們一直想帶給大家的感覺。',
+      '{doctorName}醫師陪伴每一位顧客的用心，一直是我們最引以為傲的地方。',
     ],
     middleReassurance: [
       '每一次與顧客的互動，對{brand}來說都是很珍貴的緣分。',
@@ -163,6 +164,7 @@ const REVIEW_TEMPLATES = {
       '有您這樣的支持，{brand}會更有動力繼續前進，也期待下次再見到您！',
       '歡迎您隨時回來找{brand}聊聊{mainKeyword}的大小事，我們都在這裡等您。',
       '謝謝您，也祝您順心，{brand}隨時歡迎您再次光臨。',
+      '祝您和家人都健康平安，我們下次再見面聊聊天！',
     ],
   },
   '活潑熱情': {
@@ -182,8 +184,8 @@ const REVIEW_TEMPLATES = {
       '從{mainKeyword}到{relatedKeywordsPhrase}，{brand}永遠都在進步的路上！',
     ],
     middleDoctor: [
-      '特別要幫{doctorName}醫師大聲喊話，謝謝您這麼用心地照顧大家！',
-      '{doctorName}醫師超級厲害，能被您稱讚真的讓{brand}超開心！',
+      '{doctorName}醫師每次面對{mainKeyword}都超級認真，一定要把細節都顧好才安心！',
+      '幫{doctorName}醫師大聲喊話，這麼用心地照顧大家，真的太棒了！',
       '有{doctorName}醫師在，{brand}對每一次{mainKeyword}都超有信心！',
     ],
     middleReassurance: [
@@ -195,6 +197,7 @@ const REVIEW_TEMPLATES = {
       '下次再來找我們玩喔！{brand}隨時準備好用最好的狀態迎接您！',
       '有您這句話，{brand}接下來會更拼！期待很快再見！',
       '謝謝您替{brand}加油打氣，我們會繼續努力，不見不散！',
+      '祝您天天都元氣滿滿，我們下次見，不見不散！',
     ],
   },
   '簡潔俐落': {
@@ -214,9 +217,9 @@ const REVIEW_TEMPLATES = {
       '我們也專注於{relatedKeywordsPhrase}，滿足顧客多元需求。',
     ],
     middleDoctor: [
-      '感謝{doctorName}醫師專業執行{mainKeyword}相關服務。',
-      '{doctorName}醫師的專業，是{brand}服務品質的重要保證。',
-      '{mainKeyword}由{doctorName}醫師把關，品質值得信賴。',
+      '{doctorName}醫師在{mainKeyword}的每個環節都仔細把關，確保品質穩定。',
+      '{doctorName}醫師的專業與細心，是我們服務品質的重要保證。',
+      '{mainKeyword}由{doctorName}醫師執行，品質值得信賴。',
     ],
     middleReassurance: [
       '服務流程與品質標準會持續檢視與調整。',
@@ -227,6 +230,7 @@ const REVIEW_TEMPLATES = {
       '歡迎再次選擇{brand}，我們持續提供高品質服務。',
       '感謝支持，期待下次為您服務。',
       '{brand}會持續進步，歡迎再次光臨。',
+      '祝您順利，並提醒依照建議定期回診。',
     ],
   },
 };
@@ -245,20 +249,20 @@ const NEGATIVE_FEEDBACK_QUOTE_TEMPLATES = [
 
 const FEEDBACK_TOPIC_TEMPLATES = {
   attitude: [
-    '服務態度一直是{brand}最重視的一環，很開心您也感受到了。',
-    '我們的團隊會持續保持親切用心的服務態度，謝謝您的肯定。',
+    '很多顧客一開始都會擔心溝通不順暢，很開心您感受到我們用心傾聽與說明的態度。',
+    '服務態度一直是我們最重視的一環，能讓您感受到親切用心，也是我們最想做到的事。',
   ],
   environment: [
-    '舒適乾淨的環境是{brand}持續維護的重點，謝謝您注意到這一點。',
-    '我們也會持續打理好環境細節，讓每位顧客都能感到自在。',
+    '舒適乾淨的環境一直是我們持續維護的重點，謝謝您注意到這份用心。',
+    '很多顧客都提到環境會影響心情，能讓您感到自在，我們也很開心。',
   ],
   professional: [
-    '專業與細心是{brand}的核心價值，很榮幸能得到您的肯定。',
-    '我們的團隊會持續精進{mainKeyword}相關的專業技術，不辜負您的信任。',
+    '專業與細心一直是我們的核心價值，很榮幸這次也讓您感受到了。',
+    '每一次服務我們都會仔細評估、多方確認，就是希望帶給顧客最合適的結果。',
   ],
   result: [
-    '能讓您對{mainKeyword}的結果感到滿意，是{brand}最開心的事。',
-    '我們也會持續努力，確保每一次{mainKeyword}都能達到理想的效果。',
+    '能讓您對這次的結果感到滿意，是我們最開心的事，也是我們持續努力的方向。',
+    '很多顧客一開始都會擔心效果不如預期，能讓您安心，也是我們最重視的部分。',
   ],
 };
 
@@ -269,10 +273,33 @@ const FEEDBACK_TOPIC_KEYWORDS = {
   result: ['效果', '改善', '恢復', '滿意', '成果'],
 };
 
+const GENERAL_VALIDATION_TEMPLATES = [
+  '很多顧客其實都曾有類似的想法，能讓您安心，也是我們最想達到的目標。',
+  '這也是我們一直以來努力想帶給每位顧客的感受，很開心您有確實感受到。',
+  '每一位顧客的感受對我們來說都很重要，謝謝您願意花時間分享這麼具體的回饋。',
+];
+
+const ENCOURAGE_OTHERS_TEMPLATES = [
+  '相信您的這份分享，也能讓更多還在猶豫的朋友更有信心跨出第一步。',
+  '也謝謝您把這份經驗分享出來，一定能幫助到其他有類似疑慮的朋友。',
+  '您的評論對正在考慮的朋友來說，一定是很有幫助的參考。',
+];
+
 const NEGATIVE_FEEDBACK_KEYWORDS = [
   '退費', '太貴', '不推薦', '失望', '很差', '態度不好',
   '等太久', '無效', '負評', '不滿', '投訴', '客訴', '爛',
 ];
+
+const STYLE_EMOJIS = {
+  '專業信賴': ['', '', '🙏'],
+  '親切溫暖': ['❤️', '😊', '🌟', ''],
+  '活潑熱情': ['🎉', '✨', '🙌', ''],
+  '簡潔俐落': ['', '', ''],
+};
+
+function maybeEmoji(style) {
+  return pickRandom(STYLE_EMOJIS[style] || ['']);
+}
 
 function extractQuote(feedback) {
   const segments = feedback.split(/[。！？!?\n]/).map(s => s.trim()).filter(Boolean);
@@ -341,16 +368,18 @@ function generateReviewReply() {
   // landing in a random, disconnected sequence.
   const middles = [];
 
+  let isNegative = false;
   if (feedback) {
-    const isNegative = isNegativeFeedback(feedback);
+    isNegative = isNegativeFeedback(feedback);
     const quote = extractQuote(feedback);
     if (isNegative) {
       el('rrWarning').textContent = '偵測到這則評論可能包含負面內容，本工具只做關鍵字比對，建議由專人親自回覆，不要直接套用以下內容。';
       middles.push(fillTemplate(pickRandom(NEGATIVE_FEEDBACK_QUOTE_TEMPLATES), { ...pronounVars, quote }));
     } else {
       middles.push(fillTemplate(pickRandom(FEEDBACK_QUOTE_TEMPLATES), { ...pronounVars, quote }));
-      const topics = detectTopics(feedback).slice(0, 1);
-      topics.forEach(topic => middles.push(fillTemplate(pickRandom(FEEDBACK_TOPIC_TEMPLATES[topic]), pronounVars)));
+      const topics = detectTopics(feedback);
+      const validationBank = topics.length > 0 ? FEEDBACK_TOPIC_TEMPLATES[topics[0]] : GENERAL_VALIDATION_TEMPLATES;
+      middles.push(fillTemplate(pickRandom(validationBank), pronounVars));
     }
   }
 
@@ -362,11 +391,21 @@ function generateReviewReply() {
   if (!feedback && Math.random() < 0.6) {
     middles.push(fillTemplate(pickRandom(t.middleReassurance), pronounVars));
   }
+  if (feedback && !isNegative && Math.random() < 0.6) {
+    let encourage = fillTemplate(pickRandom(ENCOURAGE_OTHERS_TEMPLATES), pronounVars);
+    const emoji1 = maybeEmoji(style);
+    if (emoji1) encourage += emoji1;
+    middles.push(encourage);
+  }
+
+  let closingText = fillTemplate(pickRandom(t.closing), vars);
+  const emoji2 = maybeEmoji(style);
+  if (emoji2) closingText += emoji2;
 
   const parts = [
     fillTemplate(pickRandom(t.opening), vars),
     ...middles,
-    fillTemplate(pickRandom(t.closing), vars),
+    closingText,
   ];
   const text = parts.join('');
 
