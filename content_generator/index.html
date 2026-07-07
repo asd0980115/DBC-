@@ -196,10 +196,10 @@ const REVIEW_TEMPLATES = {
       '{brand}會繼續保持這股熱情，把每一次服務都做到最好！',
     ],
     closing: [
-      '下次再來找我們玩喔！{brand}隨時準備好用最好的狀態迎接您！',
-      '有您這句話，{brand}接下來會更拼！期待很快再見！',
-      '謝謝您替{brand}加油打氣，我們會繼續努力，不見不散！',
-      '祝您天天都元氣滿滿，我們下次見，不見不散！',
+      '祝您{mainKeyword}後續一切順利！{brand}會一直在這裡，用心守護每一位顧客！',
+      '有您這句話，{brand}接下來會更拼！我們會持續努力，不辜負您的信任！',
+      '謝謝您替{brand}加油打氣，我們會繼續努力，把每一次服務都做到最好！',
+      '祝您健康又順心，{brand}會一直用心陪伴著您！',
     ],
   },
   '簡潔俐落': {
@@ -311,10 +311,32 @@ function maybeEmoji(style) {
   return pickRandom(STYLE_EMOJIS[style] || ['']);
 }
 
+const MAX_QUOTE_LENGTH = 40;
+
+function hasTopicKeyword(segment) {
+  return Object.values(FEEDBACK_TOPIC_KEYWORDS).some(list => list.some(k => segment.includes(k)));
+}
+
+function shortest(list) {
+  return list.slice().sort((a, b) => a.length - b.length)[0];
+}
+
+// Picking just the first sentence often grabs setup/complaint context
+// ("之前左上後牙痛了好一陣子...") rather than the actual compliment, and a
+// blind 30-char cutoff chops sentences off mid-thought. Instead, prefer a
+// segment that (a) actually names something positive (attitude/environment/
+// professional/result) and (b) is short enough to quote in full — falling
+// back step by step if nothing matches both.
 function extractQuote(feedback) {
   const segments = feedback.split(/[。！？!?\n]/).map(s => s.trim()).filter(Boolean);
-  const seg = segments[0] || feedback.trim();
-  return seg.length > 30 ? seg.slice(0, 30) + '…' : seg;
+  if (segments.length === 0) return feedback.trim();
+
+  const shortSegments = segments.filter(s => s.length <= MAX_QUOTE_LENGTH);
+  const positiveShort = shortSegments.filter(hasTopicKeyword);
+  const positiveAny = segments.filter(hasTopicKeyword);
+
+  const pick = positiveShort[0] || shortSegments[0] || shortest(positiveAny) || shortest(segments);
+  return pick.length > MAX_QUOTE_LENGTH ? pick.slice(0, MAX_QUOTE_LENGTH) + '…' : pick;
 }
 
 function detectTopics(feedback) {
@@ -399,7 +421,9 @@ function generateReviewReply() {
     const serviceDataPhrase = joinPhrase(serviceData, '', 3);
     middles.push(fillTemplate(pickRandom(DATA_TEMPLATES), { ...pronounVars, serviceDataPhrase }));
   }
-  middles.push(fillTemplate(pickRandom(t.middleRelated), pronounVars));
+  if (relatedKeywords.length > 0) {
+    middles.push(fillTemplate(pickRandom(t.middleRelated), pronounVars));
+  }
   if (doctorName) {
     middles.push(fillTemplate(pickRandom(t.middleDoctor), pronounVars));
   }
