@@ -56,12 +56,14 @@
   <div>
     <div class="card">
       <h2>輸入資料</h2>
+      <label>品牌名稱</label>
+      <input id="rrBrand" placeholder="例：安心牙醫診所">
+      <label>醫師名稱（選填）</label>
+      <input id="rrDoctorName" placeholder="例：王小明">
       <label>主關鍵字</label>
       <input id="rrMainKeyword" placeholder="例：植牙手術">
       <label>相關關鍵字（逗號分隔，選填）</label>
       <input id="rrRelatedKeywords" placeholder="例：牙周治療, 全瓷冠, 數位掃描">
-      <label>品牌名稱</label>
-      <input id="rrBrand" placeholder="例：安心牙醫診所">
       <label>文風</label>
       <select id="rrStyle">
         <option value="專業信賴">專業信賴</option>
@@ -100,15 +102,25 @@ const REVIEW_TEMPLATES = {
       '謝謝您撥空留下評論，{brand}非常重視每一位顧客在{mainKeyword}上的體驗與需求。',
       '感謝您的評論與支持，{brand}始終以專業態度看待每一次{mainKeyword}的服務。',
     ],
-    body: [
-      '我們始終堅持{advantagesPhrase}，並持續精進{relatedKeywordsPhrase}等專業領域，確保每位顧客都能獲得最合適的服務與照護。',
-      '{brand}團隊擁有{advantagesPhrase}的優勢，也持續在{relatedKeywordsPhrase}等面向投入資源，希望能讓每位顧客安心託付。',
-      '秉持{advantagesPhrase}的核心價值，{brand}也持續關注{relatedKeywordsPhrase}相關發展，力求提供最專業可靠的服務。',
+    middleAdvantage: [
+      '我們始終堅持{advantagesPhrase}，努力提供每位顧客最合適的服務。',
+      '{brand}團隊擁有{advantagesPhrase}的優勢，是我們持續進步的基礎。',
+      '秉持{advantagesPhrase}的核心價值，{brand}也持續要求自我提升。',
     ],
-    extension: [
-      '無論是{mainKeyword}前的諮詢，或是後續的追蹤與保養，{brand}都會全程用心陪伴，讓您安心無虞。',
-      '從初次接觸到完成{mainKeyword}，{brand}的每一位夥伴都秉持相同的專業與細心，盡力做到最好。',
-      '我們也持續蒐集顧客的回饋，作為改善{relatedKeywordsPhrase}服務品質的重要依據。',
+    middleRelated: [
+      '我們也持續在{relatedKeywordsPhrase}等專業領域投入資源與心力。',
+      '除了{mainKeyword}，{brand}同時關注{relatedKeywordsPhrase}相關發展，力求全面照護。',
+      '{relatedKeywordsPhrase}等相關服務，也是我們持續精進的重點項目。',
+    ],
+    middleDoctor: [
+      '特別感謝{doctorName}醫師在{mainKeyword}過程中的專業與細心。',
+      '{doctorName}醫師與整個團隊都秉持相同的專業態度，為每位顧客把關。',
+      '能由{doctorName}醫師為您提供{mainKeyword}服務，也是{brand}的榮幸。',
+    ],
+    middleReassurance: [
+      '從初次諮詢到完成{mainKeyword}，我們都會全程用心陪伴，讓您安心無虞。',
+      '我們也持續蒐集顧客的回饋，作為改善服務品質的重要依據。',
+      '無論是術前準備或術後追蹤，{brand}都會盡力提供完整的支持。',
     ],
     closing: [
       '期待未來持續為您提供優質的{mainKeyword}服務，也誠摯歡迎您再次蒞臨{brand}。',
@@ -122,14 +134,24 @@ const REVIEW_TEMPLATES = {
       '看到您的留言，{brand}整個團隊都覺得好窩心，謝謝您給我們機會照顧您的{mainKeyword}。',
       '謝謝您的分享，能陪您一起走過{mainKeyword}的過程，是{brand}最珍惜的緣分。',
     ],
-    body: [
-      '我們一直很重視{advantagesPhrase}，也希望透過{relatedKeywordsPhrase}等服務，讓每位來到{brand}的朋友都能感受到用心與溫度。',
-      '{brand}相信{advantagesPhrase}才是最重要的，未來也會持續在{relatedKeywordsPhrase}上多下功夫，陪伴大家一起變得更好。',
-      '從{advantagesPhrase}到{relatedKeywordsPhrase}，{brand}都希望能陪著每一位顧客，一起用心對待每一個小細節。',
+    middleAdvantage: [
+      '我們一直很重視{advantagesPhrase}，希望每位來到{brand}的朋友都能感受到用心。',
+      '{brand}相信{advantagesPhrase}才是最重要的，這也是我們一直努力的方向。',
+      '從{advantagesPhrase}開始，{brand}都希望能陪著每一位顧客，一起用心對待每個小細節。',
     ],
-    extension: [
-      '每一次與顧客的互動，對{brand}來說都是很珍貴的學習，謝謝您願意信任我們。',
-      '您的鼓勵是{brand}持續前進最大的動力，我們會繼續用心對待每一位朋友。',
+    middleRelated: [
+      '也希望透過{relatedKeywordsPhrase}等服務，讓大家感受到更多溫度。',
+      '未來也會持續在{relatedKeywordsPhrase}上多下功夫，陪伴大家一起變得更好。',
+      '{relatedKeywordsPhrase}這些部分，我們也會持續用心經營。',
+    ],
+    middleDoctor: [
+      '謝謝{doctorName}醫師這麼細心地照顧您的{mainKeyword}，我們都看在眼裡。',
+      '{doctorName}醫師總是很有耐心地陪伴每一位顧客，這是{brand}最引以為傲的地方。',
+      '能有{doctorName}醫師這樣用心的夥伴，是{brand}最幸運的事。',
+    ],
+    middleReassurance: [
+      '每一次與顧客的互動，對{brand}來說都是很珍貴的緣分。',
+      '您的鼓勵是{brand}持續前進最大的動力。',
       '能陪伴您走過{mainKeyword}的這段路，是{brand}覺得最有意義的事。',
     ],
     closing: [
@@ -144,15 +166,25 @@ const REVIEW_TEMPLATES = {
       '太感謝了！能被您這樣肯定{mainKeyword}的服務，{brand}真的是元氣滿滿！',
       '收到您對{mainKeyword}滿滿的好評，{brand}忍不住要跟您說聲謝謝！',
     ],
-    body: [
-      '我們家最自豪的就是{advantagesPhrase}，而且還在{relatedKeywordsPhrase}上不斷精進，就是希望帶給大家最棒的體驗！',
-      '{brand}的{advantagesPhrase}可不是說假的，加上我們對{relatedKeywordsPhrase}的用心，每一次服務都全力以赴！',
-      '從{advantagesPhrase}到{relatedKeywordsPhrase}，{brand}永遠都在進步的路上，就是要讓大家越來越滿意！',
+    middleAdvantage: [
+      '我們家最自豪的就是{advantagesPhrase}，就是希望帶給大家最棒的體驗！',
+      '{brand}的{advantagesPhrase}可不是說假的，每一次都全力以赴！',
+      '{advantagesPhrase}這些優勢，{brand}會繼續保持下去，讓大家越來越滿意！',
     ],
-    extension: [
+    middleRelated: [
+      '而且我們還在{relatedKeywordsPhrase}上不斷精進，絕對不會鬆懈！',
+      '{relatedKeywordsPhrase}這些項目，{brand}也會持續投入，跟大家一起進步！',
+      '從{mainKeyword}到{relatedKeywordsPhrase}，{brand}永遠都在進步的路上！',
+    ],
+    middleDoctor: [
+      '特別要幫{doctorName}醫師大聲喊話，謝謝您這麼用心地照顧大家！',
+      '{doctorName}醫師超級厲害，能被您稱讚真的讓{brand}team 超開心！',
+      '有{doctorName}醫師在，{brand}對每一次{mainKeyword}都超有信心！',
+    ],
+    middleReassurance: [
       '每次看到大家滿意的笑容，就是{brand}team 最有成就感的時刻！',
-      '{brand}會繼續保持這股熱情，把每一次{mainKeyword}都做到最好！',
-      '有您的鼓勵，{brand}接下來會更有動力衝刺，請大家繼續期待！',
+      '有您的鼓勵，{brand}接下來會更有動力衝刺！',
+      '{brand}會繼續保持這股熱情，把每一次服務都做到最好！',
     ],
     closing: [
       '下次再來找我們玩喔！{brand}隨時準備好用最好的狀態迎接您！',
@@ -166,15 +198,25 @@ const REVIEW_TEMPLATES = {
       '謝謝支持，{brand}持續致力於提供優質的{mainKeyword}服務。',
       '感謝肯定，這是{brand}持續精進{mainKeyword}服務的動力。',
     ],
-    body: [
-      '{brand}的優勢在於{advantagesPhrase}，並專注於{relatedKeywordsPhrase}等領域，提供穩定可靠的服務品質。',
-      '我們專注{advantagesPhrase}，同時持續優化{relatedKeywordsPhrase}，確保服務效率與品質兼顧。',
-      '憑藉{advantagesPhrase}，{brand}也持續深耕{relatedKeywordsPhrase}，滿足顧客多元需求。',
+    middleAdvantage: [
+      '{brand}的優勢在於{advantagesPhrase}，提供穩定可靠的服務品質。',
+      '我們專注{advantagesPhrase}，確保服務效率與品質兼顧。',
+      '憑藉{advantagesPhrase}，{brand}持續提升整體服務水準。',
     ],
-    extension: [
-      '服務流程與品質標準會持續檢視與調整，確保每位顧客的體驗一致。',
-      '我們重視每一則回饋，並以此作為優化{relatedKeywordsPhrase}服務的依據。',
-      '團隊會持續精進{mainKeyword}相關流程，提升整體服務效率。',
+    middleRelated: [
+      '同時持續優化{relatedKeywordsPhrase}相關流程。',
+      '{relatedKeywordsPhrase}等項目，也是我們持續精進的重點。',
+      '我們也專注於{relatedKeywordsPhrase}，滿足顧客多元需求。',
+    ],
+    middleDoctor: [
+      '感謝{doctorName}醫師專業執行{mainKeyword}相關服務。',
+      '{doctorName}醫師的專業，是{brand}服務品質的重要保證。',
+      '{mainKeyword}由{doctorName}醫師把關，品質值得信賴。',
+    ],
+    middleReassurance: [
+      '服務流程與品質標準會持續檢視與調整。',
+      '我們重視每一則回饋，並以此優化服務。',
+      '團隊會持續精進相關流程，提升整體效率。',
     ],
     closing: [
       '歡迎再次選擇{brand}，我們持續提供高品質服務。',
@@ -186,6 +228,15 @@ const REVIEW_TEMPLATES = {
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 function splitList(text) {
@@ -209,6 +260,7 @@ function generateReviewReply() {
     el('rrError').textContent = '主關鍵字與品牌名稱為必填';
     return;
   }
+  const doctorName = el('rrDoctorName').value.trim();
   const relatedKeywords = splitList(el('rrRelatedKeywords').value);
   const advantages = splitList(el('rrAdvantages').value);
   const style = el('rrStyle').value;
@@ -216,21 +268,33 @@ function generateReviewReply() {
   const vars = {
     mainKeyword,
     brand,
+    doctorName,
     relatedKeywordsPhrase: joinPhrase(relatedKeywords, '相關服務'),
     advantagesPhrase: joinPhrase(advantages, '用心服務'),
   };
 
   const t = REVIEW_TEMPLATES[style];
+
+  const middles = [
+    fillTemplate(pickRandom(t.middleAdvantage), vars),
+    fillTemplate(pickRandom(t.middleRelated), vars),
+  ];
+  if (doctorName) {
+    middles.push(fillTemplate(pickRandom(t.middleDoctor), vars));
+  }
+  if (Math.random() < 0.6) {
+    middles.push(fillTemplate(pickRandom(t.middleReassurance), vars));
+  }
+
   const parts = [
     fillTemplate(pickRandom(t.opening), vars),
-    fillTemplate(pickRandom(t.body), vars),
-    fillTemplate(pickRandom(t.extension), vars),
+    ...shuffle(middles),
     fillTemplate(pickRandom(t.closing), vars),
   ];
   const text = parts.join('');
 
   el('rrOutput').textContent = text;
-  el('rrCharCount').textContent = `目前約 ${text.length} 字（模板拼接，字數僅供參考）`;
+  el('rrCharCount').textContent = `目前約 ${text.length} 字（模板隨機拼接，字數僅供參考）`;
 }
 
 el('rrGenerateBtn').onclick = generateReviewReply;
