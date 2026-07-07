@@ -75,6 +75,8 @@
       </select>
       <label>特色優勢（逗號分隔）</label>
       <input id="rrAdvantages" placeholder="例：專業技術, 貼心服務, 舒適環境">
+      <label>服務數據（逗號分隔，選填，例如年資、案例數、滿意度）</label>
+      <input id="rrServiceData" placeholder="例：10年經驗, 500+案例, 98%滿意度">
       <label>客戶評論內容（選填，貼上想回覆的評論）</label>
       <textarea id="rrFeedback" placeholder="例：醫師人很親切，環境也很乾淨，等待時間比想像中短，效果我很滿意！"></textarea>
       <div class="row-actions">
@@ -285,6 +287,14 @@ const ENCOURAGE_OTHERS_TEMPLATES = [
   '您的評論對正在考慮的朋友來說，一定是很有幫助的參考。',
 ];
 
+// Pairs a concrete number with a conclusion + a self-citing lead-in phrase
+// ("根據我們...的服務經驗") — only used when service data is provided.
+const DATA_TEMPLATES = [
+  '根據我們{serviceDataPhrase}的服務經驗，每一位顧客的需求都值得我們用心對待，這也是我們持續努力的方向。',
+  '累積了{serviceDataPhrase}的實績，讓我們更懂得如何照顧好每一位顧客的需求。',
+  '這些年來我們累積了{serviceDataPhrase}，也始終相信細心與專業才能帶來真正的安心。',
+];
+
 const NEGATIVE_FEEDBACK_KEYWORDS = [
   '退費', '太貴', '不推薦', '失望', '很差', '態度不好',
   '等太久', '無效', '負評', '不滿', '投訴', '客訴', '爛',
@@ -346,6 +356,7 @@ function generateReviewReply() {
   const doctorName = el('rrDoctorName').value.trim();
   const relatedKeywords = splitList(el('rrRelatedKeywords').value);
   const advantages = splitList(el('rrAdvantages').value);
+  const serviceData = splitList(el('rrServiceData').value);
   const feedback = el('rrFeedback').value.trim();
   const style = el('rrStyle').value;
 
@@ -384,6 +395,10 @@ function generateReviewReply() {
   }
 
   middles.push(fillTemplate(pickRandom(t.middleAdvantage), pronounVars));
+  if (serviceData.length > 0) {
+    const serviceDataPhrase = joinPhrase(serviceData, '', 3);
+    middles.push(fillTemplate(pickRandom(DATA_TEMPLATES), { ...pronounVars, serviceDataPhrase }));
+  }
   middles.push(fillTemplate(pickRandom(t.middleRelated), pronounVars));
   if (doctorName) {
     middles.push(fillTemplate(pickRandom(t.middleDoctor), pronounVars));
