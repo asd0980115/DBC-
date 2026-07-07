@@ -136,10 +136,10 @@ const REVIEW_TEMPLATES = {
       '無論是術前準備或術後追蹤，{brand}都會盡力提供完整的支持。',
     ],
     closing: [
-      '期待未來持續為您提供優質的{mainKeyword}服務，也誠摯歡迎您再次蒞臨{brand}。',
+      '期待未來持續為您提供優質的{mainKeyword}服務，如果後續有任何狀況，都歡迎隨時與{brand}聯繫。',
       '如果您對{mainKeyword}還有任何需求，歡迎隨時與{brand}聯繫，我們將竭誠為您服務。',
-      '再次感謝您的支持與信任，{brand}會持續努力，期待下次再為您服務。',
-      '祝您{mainKeyword}後續恢復順利，也提醒記得依照建議回診追蹤，我們下次見！',
+      '再次感謝您的支持與信任，{brand}會持續努力，如有任何需要都歡迎與我們聯繫。',
+      '祝您{mainKeyword}後續恢復順利，也提醒記得依照建議回診追蹤，若有任何不適都歡迎與我們聯繫。',
     ],
   },
   '親切溫暖': {
@@ -169,10 +169,10 @@ const REVIEW_TEMPLATES = {
       '能陪伴您走過{mainKeyword}的這段路，是{brand}覺得最有意義的事。',
     ],
     closing: [
-      '有您這樣的支持，{brand}會更有動力繼續前進，也期待下次再見到您！',
-      '歡迎您隨時回來找{brand}聊聊{mainKeyword}的大小事，我們都在這裡等您。',
-      '謝謝您，也祝您順心，{brand}隨時歡迎您再次光臨。',
-      '祝您和家人都健康平安，我們下次再見面聊聊天！',
+      '有您這樣的支持，{brand}會更有動力繼續前進，往後有任何需要都歡迎隨時找我們！',
+      '往後如果{mainKeyword}有任何狀況，都歡迎隨時來找{brand}，我們一直都在。',
+      '謝謝您，也祝您順心，{brand}隨時歡迎您與我們聯繫。',
+      '祝您和家人都健康平安，往後有任何需要都歡迎跟我們聯繫！',
     ],
   },
   '活潑熱情': {
@@ -235,9 +235,9 @@ const REVIEW_TEMPLATES = {
       '團隊會持續精進相關流程，提升整體效率。',
     ],
     closing: [
-      '歡迎再次選擇{brand}，我們持續提供高品質服務。',
-      '感謝支持，期待下次為您服務。',
-      '{brand}會持續進步，歡迎再次光臨。',
+      '如果日後有相關需求，歡迎再次選擇{brand}。',
+      '感謝支持，日後如有需要歡迎與我們聯繫。',
+      '{brand}會持續進步，如有需求歡迎再次聯繫。',
       '祝您順利，並提醒依照建議定期回診。',
     ],
   },
@@ -324,26 +324,39 @@ function hasTopicKeyword(segment) {
   return Object.values(FEEDBACK_TOPIC_KEYWORDS).some(list => list.some(k => segment.includes(k)));
 }
 
-function shortest(list) {
-  return list.slice().sort((a, b) => a.length - b.length)[0];
+// Many real reviews are one long comma-separated run-on with no period
+// until the very end ("之前左上後牙痛了好一陣子，看了幾間都說沒看到明顯
+// 蛀牙，所以...，醫師人很親切，效果我很滿意！"). Splitting only on 。！？
+// treats that whole thing as a single segment, so a blind length cutoff
+// grabs the first 40 characters — the background/symptom part — instead
+// of the actual compliment. Split on commas too to get individual clauses,
+// then pick the clause that actually names something positive.
+function splitClauses(feedback) {
+  return feedback.split(/[。！？!?，,、\n]/).map(s => s.trim()).filter(Boolean);
 }
 
-// Picking just the first sentence often grabs setup/complaint context
-// ("之前左上後牙痛了好一陣子...") rather than the actual compliment, and a
-// blind 30-char cutoff chops sentences off mid-thought. Instead, prefer a
-// segment that (a) actually names something positive (attitude/environment/
-// professional/result) and (b) is short enough to quote in full — falling
-// back step by step if nothing matches both.
 function extractQuote(feedback) {
-  const segments = feedback.split(/[。！？!?\n]/).map(s => s.trim()).filter(Boolean);
-  if (segments.length === 0) return feedback.trim();
+  const clauses = splitClauses(feedback);
+  if (clauses.length === 0) return feedback.trim();
 
-  const shortSegments = segments.filter(s => s.length <= MAX_QUOTE_LENGTH);
-  const positiveShort = shortSegments.filter(hasTopicKeyword);
-  const positiveAny = segments.filter(hasTopicKeyword);
+  const idx = clauses.findIndex(hasTopicKeyword);
+  if (idx !== -1) {
+    // Pull in the next clause too so the quote doesn't feel like a
+    // fragment, as long as it still fits the length budget.
+    let quote = clauses[idx];
+    if (idx + 1 < clauses.length) {
+      const combined = quote + '，' + clauses[idx + 1];
+      if (combined.length <= MAX_QUOTE_LENGTH) quote = combined;
+    }
+    return quote.length > MAX_QUOTE_LENGTH ? quote.slice(0, MAX_QUOTE_LENGTH) + '…' : quote;
+  }
 
-  const pick = positiveShort[0] || shortSegments[0] || shortest(positiveAny) || shortest(segments);
-  return pick.length > MAX_QUOTE_LENGTH ? pick.slice(0, MAX_QUOTE_LENGTH) + '…' : pick;
+  // No clause names a specific compliment keyword. Reviews typically state
+  // the overall verdict last, so prefer the final clause(s) over the first
+  // (which is usually background/symptom description).
+  const tail = clauses.slice(-2).join('，');
+  const quote = tail.length <= MAX_QUOTE_LENGTH ? tail : clauses[clauses.length - 1];
+  return quote.length > MAX_QUOTE_LENGTH ? quote.slice(0, MAX_QUOTE_LENGTH) + '…' : quote;
 }
 
 function detectTopics(feedback) {
