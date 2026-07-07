@@ -27,10 +27,11 @@
   }
   .card h2 { font-size: 16px; margin: 0 0 12px; }
   label { display: block; font-size: 13px; margin: 10px 0 4px; color: #444; }
-  input, select {
+  input, select, textarea {
     width: 100%; padding: 8px 10px; border: 1px solid #d5d8de; border-radius: 6px;
     font-size: 14px; font-family: inherit;
   }
+  textarea { min-height: 80px; resize: vertical; }
   button {
     margin-top: 12px; padding: 9px 16px; border: none; border-radius: 6px;
     background: #2f5fed; color: #fff; font-size: 14px; cursor: pointer;
@@ -41,6 +42,7 @@
     border-radius: 8px; font-size: 13px; line-height: 1.7; min-height: 160px;
   }
   .error { color: #d92d20; font-size: 13px; margin-top: 8px; white-space: pre-wrap; }
+  .warning { color: #93370d; font-size: 13px; margin-top: 8px; white-space: pre-wrap; }
   .hint { font-size: 12px; color: #888; margin-top: 4px; }
   .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .char-count { font-size: 12px; color: #888; margin-top: 6px; }
@@ -49,7 +51,7 @@
 <body>
 <header>
   <h1>Google 商家評論回覆產生器</h1>
-  <p>純靜態版本，不呼叫任何外部 API、不需要金鑰。輸入主關鍵字、相關關鍵字、品牌名稱、文風、特色優勢，產生約 200 字、適合回覆 Google 商家評論、也容易被 AI 引擎摘錄引用的內容。</p>
+  <p>純靜態版本，不呼叫任何外部 API、不需要金鑰。可貼上客戶評論內容，自動偵測重點並引用回應，產生約 200 字、適合回覆 Google 商家評論、也容易被 AI 引擎摘錄引用的內容。</p>
 </header>
 
 <div class="layout">
@@ -73,12 +75,15 @@
       </select>
       <label>特色優勢（逗號分隔）</label>
       <input id="rrAdvantages" placeholder="例：專業技術, 貼心服務, 舒適環境">
+      <label>客戶評論內容（選填，貼上想回覆的評論）</label>
+      <textarea id="rrFeedback" placeholder="例：醫師人很親切，環境也很乾淨，等待時間比想像中短，效果我很滿意！"></textarea>
       <div class="row-actions">
         <button id="rrGenerateBtn">產生內容</button>
         <button class="secondary" id="rrRerollBtn">換一批</button>
       </div>
       <div id="rrError" class="error"></div>
-      <div class="hint">內容為模板拼接產生，屬於通用草稿，發布前建議依實際情況微調用詞。</div>
+      <div id="rrWarning" class="warning"></div>
+      <div class="hint">內容為模板拼接產生，屬於通用草稿，發布前建議依實際情況微調用詞。貼上評論內容只會做關鍵字比對與引用，不會真正理解語意。</div>
     </div>
   </div>
 
@@ -226,6 +231,65 @@ const REVIEW_TEMPLATES = {
   },
 };
 
+const FEEDBACK_QUOTE_TEMPLATES = [
+  '看到您特別提到「{quote}」，這對{brand}來說是最大的鼓勵！',
+  '謝謝您提到「{quote}」，我們會繼續保持這樣的用心。',
+  '您提到的「{quote}」，也是{brand}一直很重視的地方，謝謝您的肯定。',
+];
+
+const NEGATIVE_FEEDBACK_QUOTE_TEMPLATES = [
+  '關於您提到的「{quote}」，我們會盡快了解狀況並著手改善，造成不便還請見諒。',
+  '謝謝您讓我們知道「{quote}」這件事，{brand}會認真檢討，避免再次發生。',
+  '對於您提到的「{quote}」，{brand}深感抱歉，也會積極改善相關流程。',
+];
+
+const FEEDBACK_TOPIC_TEMPLATES = {
+  attitude: [
+    '服務態度一直是{brand}最重視的一環，很開心您也感受到了。',
+    '我們的團隊會持續保持親切用心的服務態度，謝謝您的肯定。',
+  ],
+  environment: [
+    '舒適乾淨的環境是{brand}持續維護的重點，謝謝您注意到這一點。',
+    '我們也會持續打理好環境細節，讓每位顧客都能感到自在。',
+  ],
+  professional: [
+    '專業與細心是{brand}的核心價值，很榮幸能得到您的肯定。',
+    '我們的團隊會持續精進{mainKeyword}相關的專業技術，不辜負您的信任。',
+  ],
+  result: [
+    '能讓您對{mainKeyword}的結果感到滿意，是{brand}最開心的事。',
+    '我們也會持續努力，確保每一次{mainKeyword}都能達到理想的效果。',
+  ],
+};
+
+const FEEDBACK_TOPIC_KEYWORDS = {
+  attitude: ['親切', '友善', '耐心', '細心', '貼心', '熱情'],
+  environment: ['環境', '乾淨', '舒適', '空間', '整潔'],
+  professional: ['專業', '技術', '仔細', '用心', '細膩'],
+  result: ['效果', '改善', '恢復', '滿意', '成果'],
+};
+
+const NEGATIVE_FEEDBACK_KEYWORDS = [
+  '退費', '太貴', '不推薦', '失望', '很差', '態度不好',
+  '等太久', '無效', '負評', '不滿', '投訴', '客訴', '爛',
+];
+
+function extractQuote(feedback) {
+  const segments = feedback.split(/[。！？!?\n]/).map(s => s.trim()).filter(Boolean);
+  const seg = segments[0] || feedback.trim();
+  return seg.length > 30 ? seg.slice(0, 30) + '…' : seg;
+}
+
+function detectTopics(feedback) {
+  return Object.keys(FEEDBACK_TOPIC_KEYWORDS).filter(topic =>
+    FEEDBACK_TOPIC_KEYWORDS[topic].some(k => feedback.includes(k))
+  );
+}
+
+function isNegativeFeedback(feedback) {
+  return NEGATIVE_FEEDBACK_KEYWORDS.some(k => feedback.includes(k));
+}
+
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -254,6 +318,7 @@ function fillTemplate(template, vars) {
 
 function generateReviewReply() {
   el('rrError').textContent = '';
+  el('rrWarning').textContent = '';
   const mainKeyword = el('rrMainKeyword').value.trim();
   const brand = el('rrBrand').value.trim();
   if (!mainKeyword || !brand) {
@@ -263,6 +328,7 @@ function generateReviewReply() {
   const doctorName = el('rrDoctorName').value.trim();
   const relatedKeywords = splitList(el('rrRelatedKeywords').value);
   const advantages = splitList(el('rrAdvantages').value);
+  const feedback = el('rrFeedback').value.trim();
   const style = el('rrStyle').value;
 
   const vars = {
@@ -282,7 +348,19 @@ function generateReviewReply() {
   if (doctorName) {
     middles.push(fillTemplate(pickRandom(t.middleDoctor), vars));
   }
-  if (Math.random() < 0.6) {
+
+  if (feedback) {
+    const isNegative = isNegativeFeedback(feedback);
+    const quote = extractQuote(feedback);
+    if (isNegative) {
+      el('rrWarning').textContent = '偵測到這則評論可能包含負面內容，本工具只做關鍵字比對，建議由專人親自回覆，不要直接套用以下內容。';
+      middles.push(fillTemplate(pickRandom(NEGATIVE_FEEDBACK_QUOTE_TEMPLATES), { ...vars, quote }));
+    } else {
+      middles.push(fillTemplate(pickRandom(FEEDBACK_QUOTE_TEMPLATES), { ...vars, quote }));
+      const topics = detectTopics(feedback).slice(0, 1);
+      topics.forEach(topic => middles.push(fillTemplate(pickRandom(FEEDBACK_TOPIC_TEMPLATES[topic]), vars)));
+    }
+  } else if (Math.random() < 0.6) {
     middles.push(fillTemplate(pickRandom(t.middleReassurance), vars));
   }
 
