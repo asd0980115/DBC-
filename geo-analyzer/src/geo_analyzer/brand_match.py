@@ -45,6 +45,8 @@ class BrandAliases:
 
     def matches_domain(self, domain: str) -> bool:
         norm = _normalize(domain)
+        if not norm:
+            return False
         return any(d in norm or norm in d for d in self._normalized_domains)
 
 
